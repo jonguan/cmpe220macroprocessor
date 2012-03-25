@@ -9,7 +9,10 @@
 
 #include <stdio.h>
 #include <tchar.h>
+#include <string>
+#include <stdlib.h>
+
+// Self defined headers
+#include "definitions.h"
 
 
-
-// TODO: reference additional headers your program requires here
