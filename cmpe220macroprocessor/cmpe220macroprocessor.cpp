@@ -59,15 +59,22 @@ int main(int argc, char* argv[])
 
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 int processLine(char* inputLine, char* inputFileName, char* outputFileName)
 {
 	int result = 1;
 
+	// Error Check
+	if(strlen(inputLine) < KOpFlagSymStart)
+	{
+		return result;
+	}
+
 	// Get OPCODE (strtok)
-	char *opCode = NULL;
+	char opCode[8];
+	strncpy(opCode, inputLine + kOpCodeStart, (KOpFlagSymStart - kOpCodeStart));
 
 	/* Search NAMTAB for OPCODE*/
 
