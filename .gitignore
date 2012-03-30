@@ -11,13 +11,13 @@ foo.txt
 /Debug/*
 /cmpe220macroprocessor/Debug/*
 /ipch
+/ipch/*
 
 #ignore all .tLogs
 *.tlog
 
 # ignore compiled or derived files, or user preferences
 *.o
-*.exe
 *.so
 *.sdf
 *.suo
