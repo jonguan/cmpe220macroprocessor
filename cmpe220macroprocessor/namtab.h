@@ -10,16 +10,16 @@
 
 typedef struct
 {
-	char *	symbol;
-	int		deftabStart;
-	int		deftabEnd;
+    char *	symbol;
+    int		deftabStart;
+    int		deftabEnd;
 } namtab_entry_t;
 
 typedef struct
 {
-	int					size;
-	int					capacity;
-	namtab_entry_t **	array;
+    int					size;
+    int					capacity;
+    namtab_entry_t **	array;
 } namtab_t;
 
 namtab_t *			namtab_alloc(void);

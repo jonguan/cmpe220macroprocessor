@@ -13,7 +13,7 @@
 
 typedef struct
 {
-	char **	array;
+    char **	array;
 } argtab_t;
 
 argtab_t *	argtab_alloc(void);

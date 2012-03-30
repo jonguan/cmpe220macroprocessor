@@ -10,9 +10,9 @@
 
 typedef struct
 {
-	int		size;
-	int		capacity;
-	char **	array;
+    int		size;
+    int		capacity;
+    char **	array;
 } deftab_t;
 
 deftab_t *	deftab_alloc(void);
