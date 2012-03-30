@@ -16,7 +16,7 @@ int define(char *inputFileName);
 int expand(char *inputFileName, char *outputFileName);
 
 // for debug
-#define DEBUG_MODE	(TRUE)
+#define TESTBIN_MODE	(FALSE)
 void debug_testDataStructures(void);
 
 
@@ -33,8 +33,8 @@ int main(int argc, char* argv[])
 
 	// Ugly, but effective unit testing method
 	// Note that the VS Unit Test Framework only works for C++
-	// IMPORTANT! - Set DEBUG_MODE to FALSE for production release
-	if(DEBUG_MODE)
+	// IMPORTANT! - Set TESTBIN_MODE to FALSE for production release
+	if(TESTBIN_MODE)
 	{
 		debug_testDataStructures();
 		return 0;

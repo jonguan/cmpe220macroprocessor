@@ -30,7 +30,7 @@ namtab_t * namtab_alloc(void)
 		}
 	}
 
-	printf("%s: New table @ 0x%08x\n", __func__, table);
+	//printf("%s: New table @ 0x%08x\n", __func__, table);
 	return table;
 }
 
@@ -44,15 +44,15 @@ void namtab_free(namtab_t * table)
 		{
 			for(i = 0; i < table->size; i++)
 			{
-				printf("%s: Free item %d @ 0x%08x\n", __func__, i, table->array[i]);
+				//printf("%s: Free item %d @ 0x%08x\n", __func__, i, table->array[i]);
 				free(table->array[i]);
 			}
 
-			printf("%s: Free array @ 0x%08x\n", __func__, table->array);
+			//printf("%s: Free array @ 0x%08x\n", __func__, table->array);
 			free(table->array);
 		}
 
-		printf("%s: Free table @ 0x%08x\n", __func__, table);
+		//printf("%s: Free table @ 0x%08x\n", __func__, table);
 		free(table);
 	}
 }
@@ -84,7 +84,7 @@ int namtab_add(namtab_t * table, const char * symbol, int start, int end)
 			// capacity has doubled
 			table->capacity *= 2;
 
-			printf("%s: Increased array capacity to %d\n", __func__, table->capacity);
+			//printf("%s: Increased array capacity to %d\n", __func__, table->capacity);
 		}
 
 		// allocate memory for data
@@ -105,12 +105,14 @@ int namtab_add(namtab_t * table, const char * symbol, int start, int end)
 				table->array[result] = tmpData;
 
 				// debug
+				/*
 				printf("%s: Added item %d @ 0x%08x, (%d, %d) = '%s'\n",
 						__func__, result,
 						table->array[result],
 						table->array[result]->deftabStart,
 						table->array[result]->deftabEnd,
 						table->array[result]->symbol);
+				*/
 			}
 		}
 	}

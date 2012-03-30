@@ -27,12 +27,33 @@
     <ClInclude Include="definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="argtab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="namtab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="deftab.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cmpe220macroprocessor.cpp">
+    <ClCompile Include="namtab.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="deftab.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="argtab.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmpe220macroprocessor.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

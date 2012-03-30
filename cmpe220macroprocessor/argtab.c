@@ -32,30 +32,21 @@ argtab_t * argtab_alloc(void)
 		}
 	}
 
-	printf("%s: New table @ 0x%08x\n", __func__, table);
+	//printf("%s: New table @ 0x%08x\n", __func__, table);
 	return table;
 }
 
 void argtab_free(argtab_t * table)
 {
-	int i;
-
-	if(table != NULL)
+	if(table)
 	{
 		if(table->array)
 		{
-			for(i = 0; i < ARGTAB_MAX_ARRAY_SIZE; i++)
-			{
-				if(table->array[i])
-				{
-					printf("%s: Free item %d @ 0x%08x\n", __func__, i, table->array[i]);
-					free(table->array[i]);
-				}
-			}
-			printf("%s: Free array @ 0x%08x\n", __func__, table->array);
+			argtab_clear(table); // remove all elements
+			//printf("%s: Free array @ 0x%08x\n", __func__, table->array);
 			free(table->array);
 		}
-		printf("%s: Free table @ 0x%08x\n", __func__, table);
+		//printf("%s: Free table @ 0x%08x\n", __func__, table);
 		free(table);
 	}
 }
@@ -66,7 +57,7 @@ int argtab_add(argtab_t * table, int argnum, const char * symbol)
 	int		bufsize;
 	char *	tmpData;
 
-	if( (table != NULL) && (table->array) &&
+	if( (table != NULL) && (table->array != NULL) &&
 		(argnum > 0) && (argnum <= ARGTAB_MAX_ARRAY_SIZE) &&
 		(symbol != NULL) )
 	{
@@ -88,7 +79,7 @@ int argtab_add(argtab_t * table, int argnum, const char * symbol)
 		}
 		table->array[result] = tmpData;
 
-		printf("%s: Added item %d @ 0x%08x = '%s'\n", __func__, result, table->array[result], table->array[result]);
+		//printf("%s: Added item %d @ 0x%08x = '%s'\n", __func__, result, table->array[result], table->array[result]);
 	}
 
 	return result;
@@ -106,4 +97,22 @@ char * argtab_get(argtab_t * table, int argnum)
 	}
 
 	return result;
+}
+
+void argtab_clear(argtab_t * table)
+{
+	int i;
+
+	if(table && table->array)
+	{
+		for(i = 0; i < ARGTAB_MAX_ARRAY_SIZE; i++)
+		{
+			if(table->array[i])
+			{
+				//printf("%s: Free item %d @ 0x%08x\n", __func__, i, table->array[i]);
+				free(table->array[i]);
+				table->array[i] = NULL;
+			}
+		}
+	}
 }
