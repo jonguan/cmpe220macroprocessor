@@ -10,6 +10,15 @@ foo.txt
 # Ignore folder Debug
 /Debug/*
 /cmpe220macroprocessor/Debug/*
+/ipch
 
 #ignore all .tLogs
 *.tlog
+
+# ignore compiled or derived files, or user preferences
+*.o
+*.exe
+*.so
+*.sdf
+*.suo
+*.user
