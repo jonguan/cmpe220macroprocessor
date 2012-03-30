@@ -17,9 +17,9 @@ typedef struct
 } argtab_t;
 
 argtab_t *	argtab_alloc(void);
-void		argtab_free(argtab_t * table);
-int			argtab_add(argtab_t * table, int argnum, const char * symbol);
-char *		argtab_get(argtab_t * table, int argnum);
-void		argtab_clear(argtab_t * table);
+void        argtab_free(argtab_t * table);
+int         argtab_add(argtab_t * table, int argnum, const char * symbol);
+char *      argtab_get(argtab_t * table, int argnum);
+void        argtab_clear(argtab_t * table);
 
 #endif /* ARGTAB_H_ */
