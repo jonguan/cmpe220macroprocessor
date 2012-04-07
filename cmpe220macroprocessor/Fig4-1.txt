@@ -1,0 +1,10 @@
+COPY      START   0             COPY FILE FROM INPUT TO OUTPUT
+RDBUFF    MACRO   &INDEV, &BUFADR, &RECLTH
+*
+*         MACRO TO READ RECORD INTO BUFFER
+*
+          CLEAR   X             CLEAR LOOP COUNTER
+          CLEAR   A
+          CLEAR   S
+         +LDT    #4096          SET MAXIMUM RECORD LENGTH
+          TD     =X'&INDEV'     TEST INPUT DEVICE
