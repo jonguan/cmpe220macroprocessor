@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     char *outputFileName;
     int result;
 
-    printf("beginning cmpe220 macroprocessor");
+    printf("beginning cmpe220 macroprocessor\n");
 
     // Ugly, but effective unit testing method
     // Note that the VS Unit Test Framework only works for C++
@@ -157,6 +157,8 @@ char* getline(char *inputFileName)
 
 int define(char *inputFileName)
 {
+	// enter macro name into NAMTAB
+	// enter macro prototype into DEFTAB
 
     return SUCCESS;
 }
