@@ -94,13 +94,13 @@ int processLine(char* inputLine, char* inputFileName, char* outputFileName)
     errno_t rc;
 
     // Error Check
-    if(strlen(inputLine) < KOpFlagSymStart)
+    if(strlen(inputLine) < kOpFlagSymStart)
     {
         return result;
     }
 
     // Get OPCODE (strtok)
-    strncpy_s(opCode, (KOpFlagSymStart - kOpCodeStart), inputLine + kOpCodeStart, _TRUNCATE);
+    strncpy_s(opCode, (kOpFlagSymStart - kOpCodeStart), inputLine + kOpCodeStart, _TRUNCATE);
 
     /* Search NAMTAB for OPCODE*/
 
@@ -157,6 +157,7 @@ char* getline(char *inputFileName)
 
 int define(char *inputFileName)
 {
+
     return SUCCESS;
 }
 

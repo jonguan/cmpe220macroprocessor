@@ -6,5 +6,5 @@
 
 // Input file parameter description]
 #define kOpCodeStart 10
-#define KOpFlagSymStart 18
+#define kOpFlagSymStart 18
 #define kOperandStart 19
