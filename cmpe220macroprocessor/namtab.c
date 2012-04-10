@@ -1,5 +1,5 @@
 /*
- * namtab.c
+ * namtab.c - Contains functions and definitions for the NAMTAB data structure.
  *
  *  Created on: Mar 24, 2012
  *      Author: mujtaba
@@ -11,6 +11,16 @@
 #include "common.h"
 #include "namtab.h"
 
+/**
+ * Function: namtab_alloc
+ * Description:
+ *  - Allocates memory for the NAMTAB data structure.
+ * Parameters:
+ *  - none
+ * Returns:
+ *  - If successful, returns pointer to new NAMTAB data structure. Otherwise,
+ *    returns NULL.
+ */
 namtab_t * namtab_alloc(void)
 {
     namtab_entry_t ** array;
@@ -34,6 +44,15 @@ namtab_t * namtab_alloc(void)
     return table;
 }
 
+/**
+ * Function: namtab_free
+ * Description:
+ *  - De-allocates the memory associated with the NAMTAB data structure.
+ * Parameters:
+ *  - table: Pointer to NAMTAB.
+ * Returns:
+ *  - none
+ */
 void namtab_free(namtab_t * table)
 {
     int i;
@@ -57,6 +76,19 @@ void namtab_free(namtab_t * table)
     }
 }
 
+/**
+ * Function: namtab_add
+ * Description:
+ *  - Adds an entry to the NAMTAB data structure.
+ * Parameters:
+ *  - table: Pointer to NAMTAB.
+ *  - symbol: Symbol name to add to the table.
+ *  - start: Starting index of macro definition in DEFTAB.
+ *  - end: Ending index of macro definition in DEFTAB.
+ * Returns:
+ *  - If successful, returns the index of the new NAMTAB entry. Otherwise,
+ *    returns -1.
+ */
 int namtab_add(namtab_t * table, const char * symbol, int start, int end)
 {
     int					result = -1;
@@ -120,6 +152,17 @@ int namtab_add(namtab_t * table, const char * symbol, int start, int end)
     return result;
 }
 
+/**
+ * Function: namtab_get
+ * Description:
+ *  - Retrieves a pointer to the NAMTAB entry associated with the given symbol.
+ * Parameters:
+ *  - table: Pointer to NAMTAB.
+ *  - symbol: Symbol name to search for.
+ * Returns:
+ *  - If successful, returns a pointer to the NAMTAB entry associated with the
+ *    given symbol. Otherwise, returns NULL.
+ */
 namtab_entry_t * namtab_get(namtab_t * table, const char * symbol)
 {
     namtab_entry_t * result = NULL;

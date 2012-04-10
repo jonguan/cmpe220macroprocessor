@@ -44,6 +44,15 @@ deftab_t * deftab_alloc(void)
     return table;
 }
 
+/**
+ * Function: deftab_free
+ * Description:
+ *  - De-allocates the memory associated with the DEFTAB table.
+ * Parameters:
+ *  - table: Pointer to DEFTAB table.
+ * Returns:
+ *  - none.
+ */
 void deftab_free(deftab_t * table)
 {
     int i;
@@ -67,6 +76,17 @@ void deftab_free(deftab_t * table)
     }
 }
 
+/**
+ * Function: deftab_add
+ * Description:
+ *  - Adds the specified string to the DEFTAB table.
+ * Parameters:
+ *  - table: Pointer to DEFTAB table.
+ *  - data: String to add to the table.
+ * Returns:
+ *  - If successful, returns the index where the string was stored. Otherwise,
+ *    return -1.
+ */
 int deftab_add(deftab_t * table, const char * data)
 {
     int		result = -1;
@@ -114,6 +134,17 @@ int deftab_add(deftab_t * table, const char * data)
     return result;
 }
 
+/**
+ * Function: deftab_get
+ * Description:
+ *  - Retrieves the string located at the specified index in the DEFTAB.
+ * Parameters:
+ *  - table: Pointer to DEFTAB table.
+ *  - index: Zero-based index of the string to retrieve.
+ * Returns:
+ *  - If successful, returns pointer to the string stored at the specified
+ *    location. Otherwise, returns NULL.
+ */
 char * deftab_get(deftab_t * table, int index)
 {
     char * result = NULL;
