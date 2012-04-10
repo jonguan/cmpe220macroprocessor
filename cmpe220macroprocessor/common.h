@@ -1,5 +1,5 @@
 /*
- * common.h
+ * common.h - Contains miscellaneous definitions.
  *
  *  Created on: Mar 23, 2012
  *      Author: mujtaba

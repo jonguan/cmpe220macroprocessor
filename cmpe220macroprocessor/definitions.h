@@ -1,3 +1,7 @@
+/*
+ * definitions.h - Contains global definitions.
+ */
+
 #pragma once
 
 #define TRUE 1

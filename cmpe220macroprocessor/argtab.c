@@ -1,5 +1,5 @@
 /*
- * argtab.c
+ * argtab.c - Contains functions for the ARGTAB data structure.
  *
  *  Created on: Mar 29, 2012
  *      Author: mujtaba
@@ -11,6 +11,16 @@
 #include "common.h"
 #include "argtab.h"
 
+/**
+ * Function: argtab_alloc
+ * Description:
+ *  - Allocates memory for an ARGTAB data structure.
+ * Parameters:
+ *  - none
+ * Returns:
+ *  - If successful, returns pointer to new ARGTAB structure. Otherwise,
+ *    returns NULL.
+ */
 argtab_t * argtab_alloc(void)
 {
     argtab_t * table = (argtab_t *) malloc(sizeof(argtab_t));
@@ -36,6 +46,15 @@ argtab_t * argtab_alloc(void)
     return table;
 }
 
+/**
+ * Function: argtab_free
+ * Description:
+ *  - Frees the memory associated with the given ARGTAB data structure.
+ * Parameters:
+ *  - table: Pointer to ARGTAB data structure.
+ * Returns:
+ *  - none
+ */
 void argtab_free(argtab_t * table)
 {
     if(table)
@@ -51,6 +70,18 @@ void argtab_free(argtab_t * table)
     }
 }
 
+/**
+ * Function: argtab_add
+ * Description:
+ *  - Adds the given symbol to the ARGTAB, as the specified argument number.
+ * Parameters:
+ *  - table: Pointer to ARGTAB.
+ *  - argnum: Argument number to add (1-based).
+ *  - symbol: Symbol to add.
+ * Returns:
+ *  - If successful, returns array index (0-based) of the new entry (NOTE: not
+ *    argument number!). Otherwise, returns -1.
+ */
 int argtab_add(argtab_t * table, int argnum, const char * symbol)
 {
     int		result = -1;
@@ -85,6 +116,16 @@ int argtab_add(argtab_t * table, int argnum, const char * symbol)
     return result;
 }
 
+/**
+ * Function: argtab_get
+ * Description:
+ *  - Retrieves the symbol associated with the given argument number.
+ * Parameters:
+ *  - table: Pointer to ARGTAB.
+ *  - argnum: Argument number in ARGTAB (1-based).
+ * Returns:
+ *  - Pointer to string representing the symbol.
+ */
 char * argtab_get(argtab_t * table, int argnum)
 {
     char *	result = NULL;
@@ -99,6 +140,16 @@ char * argtab_get(argtab_t * table, int argnum)
     return result;
 }
 
+/**
+ * Function: argtab_clear
+ * Description:
+ *  - Clears the data in the argument table. De-allocates memory associated
+ *    with the data in the argument table, but not the argument table itself.
+ * Parameters:
+ *  - table: Pointr to ARGTAB.
+ * Returns:
+ *  - none
+ */
 void argtab_clear(argtab_t * table)
 {
     int i;

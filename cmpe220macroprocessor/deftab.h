@@ -1,5 +1,5 @@
 /*
- * deftab.h
+ * deftab.h - Contains functions and definitions for the DEFTAB data structure.
  *
  *  Created on: Mar 23, 2012
  *      Author: mujtaba

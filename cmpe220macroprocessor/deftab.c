@@ -1,5 +1,5 @@
 /*
- * deftab.c
+ * deftab.c - Contains functions for the DEFTAB data structure.
  *
  *  Created on: Mar 23, 2012
  *      Author: mujtaba
@@ -11,6 +11,16 @@
 #include "common.h"
 #include "deftab.h"
 
+/**
+ * Function: deftab_alloc
+ * Description:
+ *  - Allocates memory for the DEFTAB data structure.
+ * Parameters:
+ *  - none
+ * Returns:
+ *  - If successful, returns pointer to new DEFTAB data structure. Otherwise,
+ *    returns NULL.
+ */
 deftab_t * deftab_alloc(void)
 {
     char ** array;

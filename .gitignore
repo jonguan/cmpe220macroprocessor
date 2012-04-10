@@ -22,3 +22,4 @@ foo.txt
 *.sdf
 *.suo
 *.user
+*.opensdf

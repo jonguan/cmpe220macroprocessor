@@ -1,5 +1,5 @@
 /*
- * argtab.h
+ * argtab.h - Contains functions and definitions for the ARGTAB data structure.s
  *
  *  Created on: Mar 24, 2012
  *      Author: mujtaba
@@ -11,6 +11,7 @@
 // this is the maximum number of arguments we can handle in macros
 #define ARGTAB_MAX_ARRAY_SIZE	(32)
 
+// The argtab_t structure contains an array of string pointers.
 typedef struct
 {
     char **	array;

@@ -1,5 +1,5 @@
 /*
- * namtab.h
+ * namtab.h - Contains functions and definitions for the NAMTAB data structure.
  *
  *  Created on: Mar 24, 2012
  *      Author: mujtaba
