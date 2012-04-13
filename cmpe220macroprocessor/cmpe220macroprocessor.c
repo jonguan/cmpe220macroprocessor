@@ -15,41 +15,114 @@ char* getline(char *inputFileName);
 int processLine(char* inputLine, char* inputFileName, char* outputFileName);
 int define(char *inputFileName);
 int expand(char *inputFileName, char *outputFileName);
+void printUsage(void);
 
-// for debug
-#define TESTBIN_MODE	(FALSE)
+// for development - unit testing
 void debug_testDataStructures(void);
-
+void debug_testParser(void);
 
 static BOOL EXPANDING; 
 static char* OPCODE;
 
+/**
+ * Function: printUsage
+ * Description:
+ *  - Documents the various options that can be supplied to the executable.
+ *    Prints the information to the user.
+ * Parameters:
+ *  - none
+ * Returns:
+ *  - none
+ */
+void printUsage(void)
+{
+    printf("\nUsage:\n");
+    printf("    -i inputFile (Input file name)\n");
+    printf("    -o outputFile (Output file name)\n");
+    printf("    -v (Verbose mode)\n");
+    printf("    -t (Unit test mode - will be removed in production code)\n");
+    printf("    -? (Display usage info)\n\n");
+}
+
 int main(int argc, char* argv[])
 {
-    char *inputFileName;
-    char *outputFileName;
+    char *inputFileName = NULL;
+    char *outputFileName = NULL;
     int result;
+    int i;
+    BOOL verbose = FALSE;
+
+    /** HANDLE ARGUMENTS **/
 
     printf("beginning cmpe220 macroprocessor\n");
-
-    // Ugly, but effective unit testing method
-    // Note that the VS Unit Test Framework only works for C++
-    // IMPORTANT! - Set TESTBIN_MODE to FALSE for production release
-    if(TESTBIN_MODE)
+    if(argc <= 1)
     {
-        debug_testDataStructures();
+        printUsage();
         return 0;
     }
 
-    // CHECK INPUT PARAMS
-    //Example input: macroProcessor -options fileInput outputFile
-    //argc = 3
-    //argv[0] = macroProcessor; argv[1] = -options; argv[2] = fileInput; argv[3] = outputFile
-    //////////////////////////////////////////////////////////////////////////////////////////
-    if(argc < 2 || argc > 4)
+    // these options can only be used by themselves
+    if(strcmp("-?", argv[1]) == 0)
     {
-        printf("Error in syntax. Example input:macroProcessor -options fileInput");
-        return 1;
+        printUsage();
+        return 0;
+    }
+    if(strcmp("-t", argv[1]) == 0)
+    {
+        debug_testDataStructures();
+        debug_testParser();
+        return 0;
+    }
+
+    // the rest of the options may appear in any order
+    for(i = 1; i < argc; i++)
+    {
+        if(strcmp("-v", argv[i]) == 0)
+        {
+            verbose = TRUE;
+        }
+        else if(strcmp("-i", argv[i]) == 0)
+        {
+            // must also be followed by input file name
+            if(i+1 < argc) // make sure there's another argument
+            {
+                i++;
+                inputFileName = argv[i];
+            }
+            else
+            {
+                // bad arguments - print usage
+                printUsage();
+                return -1;
+            }
+        }
+        else if(strcmp("-o", argv[i]) == 0)
+        {
+            // must also be followed by output file name
+            if(i+1 < argc) // make sure there's another argument
+            {
+                i++;
+                outputFileName = argv[i];
+            }
+            else
+            {
+                // bad arguments - print usage
+                printUsage();
+                return -1;
+            }
+        }
+        else // unrecognized options
+        {
+            printUsage();
+            return -1;
+        }
+    }
+
+    // make sure we have input and output files defined
+    if(inputFileName == NULL || outputFileName == NULL)
+    {
+        printUsage();
+        return -1;
     }
 
     // File I/O
@@ -236,6 +309,56 @@ void debug_testDataStructures(void)
     namtab_free(namtab);
     argtab_free(argtab);
     deftab_free(deftab);
+}
+
+void debug_testParser(void)
+{
+    parse_info_t * parse_info = NULL;
+    char buffer[128];
+
+    printf("\n%s: START PARSER TESTS\n\n", __func__);
+
+    printf("\nCase 1: Null pointer\n");
+    parse_info_print(NULL);
+
+    printf("\nCase 2: Macro definition\n");
+    sprintf_s(buffer, sizeof(buffer), "WRBUFF    MACRO   &OUTDEV,&BUFADR,&RECLTH");
+    printf("Buffer: %s\n", buffer);
+    parse_info = parse_info_alloc();
+    if(parse_info)
+    {
+        if(parse_line(parse_info, buffer) == 0)
+        {
+            parse_info_print(parse_info);
+        }
+        parse_info_free(parse_info);   
+    }
+
+    printf("\nCase 3: Comment line\n");
+    sprintf_s(buffer, sizeof(buffer), ".         MACRO TO WRITE RECORD FROM BUFFER");
+    printf("Buffer: %s\n", buffer);
+    parse_info = parse_info_alloc();
+    if(parse_info)
+    {
+        if(parse_line(parse_info, buffer) == 0)
+        {
+            parse_info_print(parse_info);
+        }
+        parse_info_free(parse_info);
+    }
+
+    printf("\nCase 4: No label, with trailing whitespace\n");
+    sprintf_s(buffer, sizeof(buffer), "         +LDT    #4096          ");
+    printf("Buffer: %s\n", buffer);
+    parse_info = parse_info_alloc();
+    if(parse_info)
+    {
+        if(parse_line(parse_info, buffer) == 0)
+        {
+            parse_info_print(parse_info);
+        }
+        parse_info_free(parse_info);
+    }
 
     printf("Press any ENTER to exit...");
     getchar();

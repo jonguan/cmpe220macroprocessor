@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="Fig4-1.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">

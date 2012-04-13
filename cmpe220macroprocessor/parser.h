@@ -17,6 +17,8 @@ typedef struct
 
 parse_info_t *  parse_info_alloc(void);
 void            parse_info_free(parse_info_t * parse_info);
+void            parse_info_clear(parse_info_t * parse_info);
+void            parse_info_print(parse_info_t * parse_info);
 int             parse_line(parse_info_t * parse_info, const char * line);
 
 #endif // PARSER_H_
