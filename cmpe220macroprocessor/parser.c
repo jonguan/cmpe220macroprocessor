@@ -38,7 +38,7 @@ void parse_info_free(parse_info_t * parse_info)
 }
 
 /**
- * Function: parse_info_line
+ * Function: parse_line
  * Description:
  *  - Parses the given line and fills in the specified parse_info_t struct.
  * Parameters:
@@ -47,7 +47,7 @@ void parse_info_free(parse_info_t * parse_info)
  * Returns:
  *  - If successful, returns 0. Otherwise, returns -1.
  */
-int parse_info_line(parse_info_t * parse_info, const char * line)
+int parse_line(parse_info_t * parse_info, const char * line)
 {
     //TODO stubbed
     return -1;
