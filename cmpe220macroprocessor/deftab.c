@@ -1,14 +1,11 @@
 /*
  * deftab.c - Contains functions for the DEFTAB data structure.
- *
- *  Created on: Mar 23, 2012
- *      Author: mujtaba
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "common.h"
+#include "definitions.h"
 #include "deftab.h"
 
 /**

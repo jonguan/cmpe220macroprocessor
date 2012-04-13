@@ -1,14 +1,11 @@
 /*
  * argtab.c - Contains functions for the ARGTAB data structure.
- *
- *  Created on: Mar 29, 2012
- *      Author: mujtaba
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "common.h"
+#include "definitions.h"
 #include "argtab.h"
 
 /**

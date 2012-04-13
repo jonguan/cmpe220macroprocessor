@@ -1,14 +1,11 @@
 /*
  * namtab.c - Contains functions and definitions for the NAMTAB data structure.
- *
- *  Created on: Mar 24, 2012
- *      Author: mujtaba
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "common.h"
+#include "definitions.h"
 #include "namtab.h"
 
 /**

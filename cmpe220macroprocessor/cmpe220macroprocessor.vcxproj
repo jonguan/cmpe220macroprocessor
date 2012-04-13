@@ -76,10 +76,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="argtab.h" />
-    <ClInclude Include="common.h" />
     <ClInclude Include="definitions.h" />
     <ClInclude Include="deftab.h" />
     <ClInclude Include="namtab.h" />
+    <ClInclude Include="parser.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +87,7 @@
     <ClCompile Include="cmpe220macroprocessor.c" />
     <ClCompile Include="deftab.c" />
     <ClCompile Include="namtab.c" />
+    <ClCompile Include="parser.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

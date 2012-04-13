@@ -1,14 +1,15 @@
-// cmpe220macroprocessor.c : Defines the entry point for the console application.
-//
+/*
+ * cmpe220macroprocessor.c - Defines the entry point for the console application.
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "definitions.h"
-#include "common.h"
 #include "argtab.h"
 #include "deftab.h"
 #include "namtab.h"
+#include "parser.h"
 
 char* getline(char *inputFileName);
 int processLine(char* inputLine, char* inputFileName, char* outputFileName);

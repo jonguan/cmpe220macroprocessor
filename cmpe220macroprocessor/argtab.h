@@ -1,8 +1,5 @@
 /*
  * argtab.h - Contains functions and definitions for the ARGTAB data structure.s
- *
- *  Created on: Mar 24, 2012
- *      Author: mujtaba
  */
 
 #ifndef ARGTAB_H_
