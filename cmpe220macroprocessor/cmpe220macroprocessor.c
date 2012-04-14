@@ -13,7 +13,7 @@
 
 char* getline(char *inputFileName);
 int processLine(char* inputLine, char* inputFileName, char* outputFileName);
-int define(char *inputFileName);
+int define(FILE * inputFile, FILE * outputFile, const char * macroLine);
 int expand(char *inputFileName, char *outputFileName);
 void printUsage(void);
 
@@ -21,8 +21,12 @@ void printUsage(void);
 void debug_testDataStructures(void);
 void debug_testParser(void);
 
+// global variables
 static BOOL EXPANDING; 
 static char* OPCODE;
+static deftab_t * deftab = NULL;
+static namtab_t * namtab = NULL;
+static argtab_t * argtab = NULL;
 
 /**
  * Function: printUsage
@@ -229,10 +233,72 @@ char* getline(char *inputFileName)
     return NULL;
 }
 
-int define(char *inputFileName)
+/**
+ * Function: define
+ * Description:
+ *  - Handles the definitions of macros. Enters information into NAMTAB and
+ *    DEFTAB. Substitutes positional notation for parameters. Also, handles
+ *    recursive MACRO declarations.
+ * Parameters:
+ *  - inputFile: File pointer to the already open input file.
+ *  - outputFile: File pointer to the already open outputfile.
+ *  - macroLine: The line of code that contains the MACRO directive (macro
+ *    declaration).
+ * Returns:
+ *  - If successful, returns SUCCESS. Otherwise, returns FAILURE.
+ */
+int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 {
-	// enter macro name into NAMTAB
-	// enter macro prototype into DEFTAB
+	/*
+	 * Algorithm from the textbook:
+	 *
+	 *	enter macro name into NAMTAB
+	 *	enter macro prototype into DEFTAB
+	 *	LEVEL = 1
+	 *	while(LEVEL > 0)
+	 *	{
+	 *		GETLINE
+	 *		if(this is not a comment line)
+	 *		{
+	 *			substitute positional notation for parameters
+	 *			enter line into DEFTAB
+	 *			if(OPCODE = 'MACRO')
+	 *			{
+	 *				LEVEL++
+	 *			}
+	 *			else if(OPCODE = 'MEND')
+	 *			{
+	 *				LEVEL--
+	 *			}
+	 *		} // if not comment
+	 *	} // while
+	 *	store in NAMTAB pointers to beginning and end of definition
+	 */
+
+	parse_info_t * parse_info;
+	int startIndex;
+	int endIndex;
+
+	if(argtab == NULL || deftab == NULL || namtab == NULL)
+	{
+		// data structures not initialized
+		printf("ERROR - %s: Data structures not initialized!\n", __func__);
+		return FAILURE;
+	}
+	else if(inputFile == NULL || outputFile == NULL)
+	{
+		// bad file pointers
+		printf("ERROR - %s: Bad file pointer!\n", __func__);
+		return FAILURE;
+	}
+	else if(macroLine == NULL)
+	{
+		// null string for macro line
+		printf("ERROR - %s: Null string for macro line!\n", __func__);
+		return FAILURE;
+	}
+
+	//TODO finish this
 
     return SUCCESS;
 }

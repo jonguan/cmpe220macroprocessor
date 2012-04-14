@@ -8,6 +8,7 @@
 #define TRUE 1
 #define FALSE 0
 #define SUCCESS 0
+#define FAILURE -1
 
 // For those used to GCC.. :-)
 #define __func__ __FUNCTION__
