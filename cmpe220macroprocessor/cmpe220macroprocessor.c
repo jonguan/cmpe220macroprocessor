@@ -221,6 +221,7 @@ char* getline(char *inputFileName)
 {
     FILE *inputFile;
     errno_t rc = fopen_s(&inputFile, inputFileName, "r");
+	char * line;
 
     // Error check
     if (inputFile == NULL) {
@@ -228,9 +229,21 @@ char* getline(char *inputFileName)
         return NULL;
     }
 
+	if(EXPANDING)
+	{
+	    // get next line of macro definition from DEFTAB
+		// substitute arguments from ARGTAB for positional notation
+		line = deftab_get(deftab, 1); // the 1 is hardcoded right now; need to figure out how to pass in macroline
+	}
+	else
+	{
+		// read next line from input file;
+		fgets(line,255,inputFile);
+	}
+
     fclose(inputFile);
 
-    return NULL;
+    return line;
 }
 
 /**
