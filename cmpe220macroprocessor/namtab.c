@@ -179,3 +179,24 @@ namtab_entry_t * namtab_get(namtab_t * table, const char * symbol)
 
     return result;
 }
+
+/**
+ * Function: namtab_getIndex
+ * Description:
+ *  - Retrieves a pointer to the specified entry in namtab.
+ * Parameters:
+ *  - table: Pointer to NAMTAB data structure.
+ *  - index: Valid index in the NAMTAB data structure.
+ * Returns:
+ *  - none
+ */
+namtab_entry_t * namtab_getIndex(namtab_t * table, int index)
+{
+    namtab_entry_t * result = NULL;
+    if(table && index >= 0 && index < table->size)
+    {
+        result = table->array[index];
+    }
+
+    return result;
+}

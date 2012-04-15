@@ -23,5 +23,6 @@ namtab_t *          namtab_alloc(void);
 void                namtab_free(namtab_t * table);
 int                 namtab_add(namtab_t * table, const char * symbol, int start, int end);
 namtab_entry_t *    namtab_get(namtab_t * table, const char * symbol);
+namtab_entry_t *    namtab_getIndex(namtab_t * table, int index);
 
 #endif /* NAMTAB_H_ */

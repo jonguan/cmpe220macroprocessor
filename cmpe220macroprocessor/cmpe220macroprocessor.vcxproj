@@ -82,6 +82,7 @@
     <ClInclude Include="namtab.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="argtab.c" />
@@ -89,6 +90,7 @@
     <ClCompile Include="deftab.c" />
     <ClCompile Include="namtab.c" />
     <ClCompile Include="parser.c" />
+    <ClCompile Include="test.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
