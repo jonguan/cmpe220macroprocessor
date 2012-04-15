@@ -15,7 +15,7 @@
 char* getline(char *inputFileName);
 int processLine(char* inputLine, char* inputFileName, char* outputFileName);
 int define(FILE * inputFile, FILE * outputFile, const char * macroLine);
-int expand(char *inputFileName, char *outputFileName);
+int expand(FILE *inputFile, FILE *outputFile, const char *macroName);
 void printUsage(void);
 int getPositiveMin(int a, int b);
 void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
@@ -23,6 +23,7 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 // global variables
 static BOOL EXPANDING; 
 static char* OPCODE;
+static int deftabIndex;
 static deftab_t * deftab = NULL;
 static namtab_t * namtab = NULL;
 static argtab_t * argtab = NULL;
@@ -183,8 +184,8 @@ int processLine(char* inputLine, char* inputFileName, char* outputFileName)
 
     if (opCode != NULL)
     {
-        //expand
-        result = expand(inputFileName, outputFileName);
+        //TODO call expand
+        //result = expand(inputFileDes, outputFileDes, opCode);
     }
     else if (strcmp(opCode, "MACRO"))
     {
@@ -232,7 +233,7 @@ char* getline(char *inputFileName)
 	{
 	    // get next line of macro definition from DEFTAB
 		// substitute arguments from ARGTAB for positional notation
-		line = deftab_get(deftab, 1); // the 1 is hardcoded right now; need to figure out how to pass in macroline
+		line = deftab_get(deftab, deftabIndex);
 	}
 	else
 	{
@@ -404,11 +405,6 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
     // free allocated memory
     argtab_free(tmp_argtab);
     parse_info_free(parse_info);
-    return SUCCESS;
-}
-
-int expand(char *inputFileName, char *outputFileName)
-{
     return SUCCESS;
 }
 
