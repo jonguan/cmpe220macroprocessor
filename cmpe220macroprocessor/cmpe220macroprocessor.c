@@ -15,12 +15,13 @@
 char* getline(char *inputFileName);
 int processLine(char* inputLine, char* inputFileName, char* outputFileName);
 int define(FILE * inputFile, FILE * outputFile, const char * macroLine);
-int expand(char *inputFileName, char *outputFileName);
+int expand(FILE *inputFile, FILE *outputFile, const char *macroName);
 void printUsage(void);
 
 // global variables
 static BOOL EXPANDING; 
 static char* OPCODE;
+static int deftabIndex;
 static deftab_t * deftab = NULL;
 static namtab_t * namtab = NULL;
 static argtab_t * argtab = NULL;
@@ -182,7 +183,7 @@ int processLine(char* inputLine, char* inputFileName, char* outputFileName)
     if (opCode != NULL)
     {
         //expand
-        result = expand(inputFileName, outputFileName);
+        result = expand(inputFileDes, outputFileDes, opCode);
     }
     else if (strcmp(opCode, "MACRO"))
     {
@@ -364,7 +365,3 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
     return SUCCESS;
 }
 
-int expand(char *inputFileName, char *outputFileName)
-{
-    return SUCCESS;
-}
