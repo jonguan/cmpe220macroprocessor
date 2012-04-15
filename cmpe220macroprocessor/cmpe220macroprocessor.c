@@ -17,6 +17,8 @@ int processLine(char* inputLine, char* inputFileName, char* outputFileName);
 int define(FILE * inputFile, FILE * outputFile, const char * macroLine);
 int expand(char *inputFileName, char *outputFileName);
 void printUsage(void);
+int getPositiveMin(int a, int b);
+void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
 
 // global variables
 static BOOL EXPANDING; 
@@ -261,8 +263,18 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 {
     parse_info_t * parse_info = NULL;
     namtab_entry_t * namtab_entry = NULL;
+    argtab_t * tmp_argtab = NULL;
+    int argidx = 1;
     int index = 0;
     int level = 1;
+    int i = 0;
+    const char argDelim[] = ", ";
+    char * params = NULL;
+    char * token = NULL;
+    char * nextToken = NULL;
+    char * argReplace;
+    char argWith[16];
+    char * tmpString;
     //TODO get rid of this - only until get line is implemented
     int currentLineIndex = 1;
     char dummyLines[][128] = {
@@ -330,6 +342,27 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
     // enter macro prototype into DEFTAB
     namtab_entry->deftabStart = deftab_add(deftab, macroLine);
 
+    // create a temporary local argtab for keeping track of parameters
+    tmp_argtab = argtab_alloc();
+    if(tmp_argtab == NULL)
+    {
+        printf("ERROR: Couldn't allocate memory for a temporary local argtab!\n");
+        parse_info_free(parse_info);
+        return FAILURE;
+    }
+    if(parse_info->operators)
+    {
+        params = _strdup(parse_info->operators);
+        token = strtok_s(params, argDelim, &nextToken);
+        while(token != NULL)
+        {
+            argtab_add(tmp_argtab, argidx++, token);
+            token = strtok_s(NULL, argDelim, &nextToken);
+        }
+        free(params);
+        params = NULL;
+    }
+
     while(level > 0)
     {
         //TODO CALL GETLINE
@@ -337,6 +370,7 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
         parse_info_clear(parse_info);
         if(parse_line(parse_info, currentLine) != 0)
         {
+            argtab_free(tmp_argtab);
             parse_info_free(parse_info);
             return FAILURE;
         }
@@ -344,7 +378,15 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
         if(parse_info->isComment == FALSE)
         {
             //TODO substitute positional notation for parameters
-            index = deftab_add(deftab, currentLine);
+            tmpString = _strdup(currentLine);
+            for(i = 1; i < argidx; i++)
+            {
+                argReplace = argtab_get(tmp_argtab, i);
+                sprintf_s(argWith, sizeof(argWith), "?%d", i);
+                strReplace(tmpString, strlen(tmpString) + 1, argReplace, argWith);
+            }
+            index = deftab_add(deftab, tmpString);
+            free(tmpString);
             if(parse_info->opcode && strcmp(parse_info->opcode, "MACRO") == 0)
             {
                 level++;
@@ -360,6 +402,7 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
     namtab_entry->deftabEnd = index;
 
     // free allocated memory
+    argtab_free(tmp_argtab);
     parse_info_free(parse_info);
     return SUCCESS;
 }
@@ -367,4 +410,100 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 int expand(char *inputFileName, char *outputFileName)
 {
     return SUCCESS;
+}
+
+/**
+ * Funtion: getPositiveMin
+ * Description:
+ *  - Returns the lesser of two integers.
+ * Parameters:
+ *  - a: Integer one.
+ *  - b: Integer two.
+ * Returns:
+ *  - The lesser of the two integer values.
+ */
+int getPositiveMin(int a, int b)
+{
+    int result = 0;
+    if(a >= 0 && b >= 0)
+    {
+        result = (a < b)? a : b;
+    }
+    else if(a >= 0)
+    {
+        result = a;
+    }
+    else if(b >= 0)
+    {
+        result = b;
+    }
+
+    return result;
+}
+
+/**
+ * Function: strReplace
+ * Description:
+ *  - Given a string and its buffer size, replaces all occurrences of substring
+      with another substring.
+ * Parameters:
+ *  - string: String to search in. Result will be written here too.
+ *  - bufsize: Size of the string buffer.
+ *  - replace: String to search for.
+ *  - with: String to replace with.
+ * Returns:
+ *  - none
+ */
+void strReplace(char * string, size_t bufsize, const char * replace, const char * with)
+{
+    char * tmpString = NULL;
+    char * searchptr = NULL;
+    char * srcptr = string;
+    char * srcmax = string + strlen(string);
+    char * dstptr = NULL;
+    char * dstmax = NULL;
+    int i = 0;
+    int replaceSize;
+    int withSize;
+    int copySize;
+
+    // some error checking
+    if(string == NULL || bufsize <= 0 || replace == NULL || with == NULL)
+    {
+        return;
+    }
+
+    // allocate a temporary buffer, same size as the one supplied
+    tmpString = (char *)malloc(bufsize);
+    dstptr = tmpString;
+    dstmax = dstptr + bufsize - 1;
+    replaceSize = strlen(replace);
+    searchptr = strstr(srcptr, replace);
+    copySize = getPositiveMin(searchptr - srcptr, dstmax - dstptr);
+    while(searchptr != NULL && dstptr < dstmax)
+    {
+        if(copySize > 0)
+        {
+            memcpy(dstptr, srcptr, copySize);   // copy until match
+            dstptr += copySize;
+            srcptr += copySize;
+        }
+        withSize = getPositiveMin(strlen(with), dstmax - dstptr);
+        memcpy(dstptr, with, withSize);
+        dstptr += withSize;
+        srcptr += replaceSize;
+
+        searchptr = strstr(srcptr, replace);
+        copySize = getPositiveMin(searchptr - srcptr, dstmax - dstptr);
+    }
+    if(searchptr == NULL && srcmax > srcptr)
+    {
+        copySize = getPositiveMin(srcmax - srcptr, dstmax - dstptr);
+        memcpy(dstptr, srcptr, copySize);
+        dstptr += copySize;
+        srcptr += copySize;
+    }
+    *dstptr = '\0'; // null termination
+    strcpy_s(string, bufsize, tmpString);
+    free(tmpString);
 }

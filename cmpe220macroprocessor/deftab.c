@@ -125,7 +125,7 @@ int deftab_add(deftab_t * table, const char * data)
         result = table->size++;
         table->array[result] = tmpData;
 
-        //printf("%s: Added item %d @ 0x%08x = '%s'\n", __func__, result, table->array[result], table->array[result]);
+        printf("%s: Added item %d @ 0x%08x = '%s'\n", __func__, result, table->array[result], table->array[result]);
     }
 
     return result;
