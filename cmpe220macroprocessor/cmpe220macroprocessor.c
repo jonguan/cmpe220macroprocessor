@@ -231,7 +231,7 @@ char* getline(char *inputFileName)
 	{
 	    // get next line of macro definition from DEFTAB
 		// substitute arguments from ARGTAB for positional notation
-		line = deftab_get(deftab, 1); // the 1 is hardcoded right now; need to figure out how to pass in macroline
+		line = deftab_get(deftab, deftabIndex);
 	}
 	else
 	{
