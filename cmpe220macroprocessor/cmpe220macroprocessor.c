@@ -221,7 +221,10 @@ char* getline(char *inputFileName)
 {
     FILE *inputFile;
     errno_t rc = fopen_s(&inputFile, inputFileName, "r");
-	char * line;
+	char * line = NULL;
+    char * argtab_val = NULL;
+	int arrayBufSize = ARGTAB_MAX_ARRAY_SIZE * sizeof(char *);
+    int n;
 
     // Error check
     if (inputFile == NULL) {
@@ -232,8 +235,17 @@ char* getline(char *inputFileName)
 	if(EXPANDING)
 	{
 	    // get next line of macro definition from DEFTAB
-		// substitute arguments from ARGTAB for positional notation
 		line = deftab_get(deftab, deftabIndex);
+		// substitute arguments from ARGTAB for positional notation  
+        for(n = 0; n < ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
+		{
+            char * str = "?";
+            char ntext[3]; 
+            itoa(n, ntext, 10); // need to convert int n to char
+            strcat(str, ntext); // create "?n" as char
+			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
+            strReplace(line, arrayBufSize, str, argtab_val); // replaces "?n" with value found in ARGTAB
+		}
 	}
 	else
 	{
