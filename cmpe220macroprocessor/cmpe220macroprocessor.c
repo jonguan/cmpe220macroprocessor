@@ -24,6 +24,7 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 static BOOL EXPANDING; 
 static char* OPCODE;
 static int deftabIndex;
+static char* currentLine = NULL;
 static deftab_t * deftab = NULL;
 static namtab_t * namtab = NULL;
 static argtab_t * argtab = NULL;
@@ -217,17 +218,15 @@ int processLine(char* inputLine, char* inputFileName, char* outputFileName)
     return result;
 }
 
-char* getline(char *inputFileName)
+char* getline(FILE * inputFileName)
 {
-    FILE *inputFile;
-    errno_t rc = fopen_s(&inputFile, inputFileName, "r");
 	char * line = NULL;
     char * argtab_val = NULL;
 	int arrayBufSize = ARGTAB_MAX_ARRAY_SIZE * sizeof(char *);
     int n;
 
     // Error check
-    if (inputFile == NULL) {
+    if (inputFileName == NULL) {
         fprintf(stderr, "Can't open input file in.list!\n");
         return NULL;
     }
@@ -236,6 +235,7 @@ char* getline(char *inputFileName)
 	{
 	    // get next line of macro definition from DEFTAB
 		line = deftab_get(deftab, deftabIndex);
+		currentLine = line;
 		// substitute arguments from ARGTAB for positional notation  
         for(n = 0; n < ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
 		{
@@ -244,18 +244,18 @@ char* getline(char *inputFileName)
             itoa(n, ntext, 10); // need to convert int n to char
             strcat(str, ntext); // create "?n" as char
 			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
-            strReplace(line, arrayBufSize, str, argtab_val); // replaces "?n" with value found in ARGTAB
+            strReplace(currentLine, arrayBufSize, str, argtab_val); // replaces "?n" with value found in ARGTAB
 		}
 	}
 	else
 	{
 		// read next line from input file;
-		fgets(line,255,inputFile);
+		fgets(currentLine,255,inputFileName);
 	}
 
-    fclose(inputFile);
+    fclose(inputFileName);
 
-    return line;
+    return currentLine;
 }
 
 /**
