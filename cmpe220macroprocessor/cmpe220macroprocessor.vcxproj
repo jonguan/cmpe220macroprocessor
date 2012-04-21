@@ -91,6 +91,7 @@
     <ClCompile Include="argtab.c" />
     <ClCompile Include="cmpe220macroprocessor.c" />
     <ClCompile Include="deftab.c" />
+    <ClCompile Include="expand.c" />
     <ClCompile Include="namtab.c" />
     <ClCompile Include="parser.c" />
     <ClCompile Include="test.c" />

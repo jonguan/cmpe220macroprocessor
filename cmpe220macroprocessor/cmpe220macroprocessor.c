@@ -49,6 +49,21 @@ void printUsage(void)
     printf("    -? (Display usage info)\n\n");
 }
 
+/**
+ * Function: main
+ * Description:
+ *  - Documents the various options that can be supplied to the executable.
+ *    Prints the information to the user.
+ * Parameters:
+ * Flags 
+ * -i inputFile (required)
+ * -o outputFile (required)
+ * -v (optional - verbose mode)
+ * -t (optional - test mode)
+ * -? (optional - display usage info)
+ * Returns:
+ * SUCCESS (0) or FAILURE (-1)
+ */
 int main(int argc, char* argv[])
 {
     char *inputFileName = NULL;
@@ -63,20 +78,20 @@ int main(int argc, char* argv[])
     if(argc <= 1)
     {
         printUsage();
-        return 0;
+        return SUCCESS;
     }
 
     // these options can only be used by themselves
     if(strcmp("-?", argv[1]) == 0)
     {
         printUsage();
-        return 0;
+        return SUCCESS;
     }
     if(strcmp("-t", argv[1]) == 0)
     {
         debug_testDataStructures();
         debug_testParser();
-        return 0;
+        return SUCCESS;
     }
 
     // the rest of the options may appear in any order
@@ -98,7 +113,7 @@ int main(int argc, char* argv[])
             {
                 // bad arguments - print usage
                 printUsage();
-                return -1;
+                return FAILURE;
             }
         }
         else if(strcmp("-o", argv[i]) == 0)
@@ -113,13 +128,13 @@ int main(int argc, char* argv[])
             {
                 // bad arguments - print usage
                 printUsage();
-                return -1;
+                return FAILURE;
             }
         }
         else // unrecognized options
         {
             printUsage();
-            return -1;
+            return FAILURE;
         }
     }
 
@@ -127,7 +142,7 @@ int main(int argc, char* argv[])
     if(inputFileName == NULL || outputFileName == NULL)
     {
         printUsage();
-        return -1;
+        return FAILURE;
     }
 
     // File I/O
@@ -205,7 +220,7 @@ int processLine(char* inputLine, char* inputFileName, char* outputFileName)
         // Error check
         if (outputFile == NULL) {
             fprintf(stderr, "Can't open output file in.list!\n");
-            return 1;
+            return FAILURE;
         }
 
         // write line out
