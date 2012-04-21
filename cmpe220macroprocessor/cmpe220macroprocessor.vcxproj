@@ -94,6 +94,7 @@
     <ClCompile Include="expand.c" />
     <ClCompile Include="namtab.c" />
     <ClCompile Include="parser.c" />
+    <ClCompile Include="processLine.c" />
     <ClCompile Include="test.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

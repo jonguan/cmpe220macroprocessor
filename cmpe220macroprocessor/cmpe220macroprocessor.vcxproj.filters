@@ -63,5 +63,8 @@
     <ClCompile Include="expand.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="processLine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
