@@ -22,6 +22,7 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char * argv[]);
 
 // global variables
+static 	BOOL VERBOSE = FALSE;
 static BOOL EXPANDING; 
 static char* OPCODE;
 static int deftabIndex;
@@ -70,16 +71,14 @@ int main(int argc, char* argv[])
 	char *inputFileName = NULL;
 	char *outputFileName = NULL;
 	int result;
-	int i;
-	BOOL verbose = FALSE;
 	errno_t rc;
 	FILE *inputFile = NULL;
 	FILE *outputFile = NULL;
-
-	printf("beginning cmpe220 macroprocessor\n");
+	if (VERBOSE)
+		printf("beginning cmpe220 macroprocessor\n");
 
 	/** HANDLE ARGUMENTS **/
-	result = processInputCommand(inputFileName, outputFileName, argc, argv);
+	result = parseInputCommand(inputFileName, outputFileName, argc, argv);
 
 	if (result == FAILURE || argc < 3)
 	{
@@ -119,14 +118,14 @@ int main(int argc, char* argv[])
 
 		while(strcmp(OPCODE, "END") != 0)
 		{
-			macroLine = getline(inputFile);
+			currentLine = getline(inputFile);
 
 			// Error check
-			if (line == NULL)
+			if (currentLine == NULL)
 				printf("ERROR in getLine\n");
 				break;
 
-			result = processLine(inputFile, outputFile, macroLine);
+			result = processLine(inputFile, outputFile, currentLine);
 
 			if (result != SUCCESS)
 			{
@@ -168,6 +167,8 @@ int main(int argc, char* argv[])
 */
 int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char * argv[])
 {
+	int i;
+
 	if(argc <= 1)
 	{
 		printUsage();
@@ -195,7 +196,7 @@ int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char 
 		{
 			if(strcmp("-v", argv[i]) == 0)
 			{
-				verbose = TRUE;
+				VERBOSE = TRUE;
 			}
 			else if(strcmp("-i", argv[i]) == 0)
 			{
@@ -203,8 +204,7 @@ int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char 
 				if(i+1 < argc) // make sure there's another argument
 				{
 					i++;
-					// dereferenced to modify parent function pointer
-					*inputFileName = argv[i];
+					inputFileName = argv[i];
 				}
 				else
 				{
@@ -219,8 +219,7 @@ int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char 
 				if(i+1 < argc) // make sure there's another argument
 				{
 					i++;
-					// dereferenced to modify parent function pointer
-					*outputFileName = argv[i];
+					outputFileName = argv[i];
 				}
 				else
 				{
@@ -243,10 +242,10 @@ int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char 
 			return FAILURE;
 		}
 
-		return SUCCESS;
-}
+	
+	}
 
-
+	return SUCCESS;
 }
 
 
@@ -273,7 +272,7 @@ char* getline(FILE * inputFile)
 		{
 			char * str = "?";
 			char ntext[3]; 
-			itoa(n, ntext, 10); // need to convert int n to char
+			_itoa(n, ntext, 10); // need to convert int n to char
 			strcat(str, ntext); // create "?n" as char
 			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
 			strReplace(currentLine, arrayBufSize, str, argtab_val); // replaces "?n" with value found in ARGTAB
@@ -282,7 +281,7 @@ char* getline(FILE * inputFile)
 	else
 	{
 		// read next line from input file;
-		fgets(currentLine,255,inputFileName);
+		fgets(currentLine,255,inputFile);
 	}
 
 	return currentLine;

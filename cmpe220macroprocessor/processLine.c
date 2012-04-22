@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include "common.h"
 #include "definitions.h"
 #include "argtab.h"
 #include "deftab.h"
@@ -39,21 +38,19 @@
 * Returns:
 * SUCCESS (0) or FAILURE (-1)
 */
-int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine);
+int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 {
 	char opCode[8];
 	int result = FAILURE;
-	FILE *outputFile;
-	errno_t rc;
 
 	// Error Check
-	if(strlen(inputLine) < kOpFlagSymStart)
+	if(strlen(macroLine) < kOpFlagSymStart)
 	{
 		return result;
 	}
 
 	// Get OPCODE (strtok)
-	strncpy_s(opCode, (kOpFlagSymStart - kOpCodeStart), inputLine + kOpCodeStart, _TRUNCATE);
+	strncpy_s(opCode, (kOpFlagSymStart - kOpCodeStart), macroLine + kOpCodeStart, _TRUNCATE);
 
 	/* Search NAMTAB for OPCODE*/
 
@@ -72,21 +69,16 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine);
 		//write source line to expanded file
 		////////////////////////////////////////////
 
-		// Open output file
-		//Output is the last operand (argc-1)
-		rc = fopen_s(&outputFile, outputFileName, "w");
 
 		// Error check
 		if (outputFile == NULL) {
-			fprintf(stderr, "Can't open output file in.list!\n");
+			fprintf(stderr, "Output file passed to processLine is null!\n");
 			return FAILURE;
 		}
 
 		// write line out
 		fprintf(outputFile, "inputLine");
 
-		// close file
-		fclose(outputFile);
 	}
 
 	return result;
