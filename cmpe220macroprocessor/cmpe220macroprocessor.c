@@ -6,30 +6,31 @@
 #include <stdio.h>
 #include <string.h>
 #include "definitions.h"
-#include "argtab.h"
-#include "deftab.h"
-#include "namtab.h"
 #include "parser.h"
 #include "test.h"
 
-char* getline(FILE *inputFile);
-int processLine(FILE * inputFile, FILE* outputFile, const char * macroLine);
-int define(FILE * inputFile, FILE * outputFile, const char * macroLine);
-int expand(FILE *inputFile, FILE *outputFile, const char *macroName);
-void printUsage(void);
-int getPositiveMin(int a, int b);
-void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
-int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char * argv[]);
+// Initialize global variables
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-// global variables
-static 	BOOL VERBOSE = FALSE;
-static BOOL EXPANDING; 
-static char* OPCODE;
-static int deftabIndex;
-static char* currentLine = NULL;
-static deftab_t * deftab = NULL;
-static namtab_t * namtab = NULL;
-static argtab_t * argtab = NULL;
+// Verbose flag - prints line numbers to output file and debug information to console
+BOOL VERBOSE = FALSE;
+
+// Expanding flag - for function expand
+BOOL EXPANDING = FALSE; 
+
+// OPCODE pointer - to determine what the opcode currently is
+char* OPCODE = NULL;
+
+// Pointer to current index of definitions table
+int deftabIndex;
+
+// Pointer to current line of input file
+char* currentLine = NULL;
+
+// Pointers to table structures
+deftab_t * deftab = NULL;
+namtab_t * namtab = NULL;
+argtab_t * argtab = NULL;
 
 /**
 * Function: printUsage

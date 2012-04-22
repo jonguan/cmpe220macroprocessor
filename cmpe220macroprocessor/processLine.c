@@ -18,9 +18,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include "definitions.h"
-#include "argtab.h"
-#include "deftab.h"
-#include "namtab.h"
 #include "parser.h"
 
 /**
@@ -56,13 +53,13 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 
 	if (opCode != NULL)
 	{
-		//TODO call expand
-		//result = expand(inputFileDes, outputFileDes, opCode);
+		//Call expand
+		result = expand(inputFile, outputFile, opCode);
 	}
 	else if (strcmp(opCode, "MACRO"))
 	{
-		//TODO call define
-		//result = define(inputFileName);
+		//Call define
+		result = define(inputFile, outputFile, macroLine);
 	}
 	else
 	{

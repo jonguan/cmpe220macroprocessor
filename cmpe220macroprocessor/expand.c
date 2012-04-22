@@ -17,13 +17,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include "common.h"
 #include "definitions.h"
-#include "argtab.h"
-#include "deftab.h"
-#include "namtab.h"
 #include "parser.h"
 
+// local function definitions
+int setUpArguments (char *line, const char *macroName);
+int commentOutMacroCall(char *inputLine, FILE *outputfd);
 
 /*
  * expand:
@@ -77,7 +76,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		
 	while (deftabIndex < endOfMacroDef) {	// Assumes the MACRO definition ends with MEND in DEFTAB!
 		line = getline(inputFileDes);
-		processline(line, inputFileDes, outputFileDes);
+		processLine(inputFileDes, outputFileDes, line);
 		deftabIndex++;
 	}
 
@@ -112,7 +111,7 @@ int setUpArguments (char *line, const char *macroName)
 	 * If ARGTAB creation succeeded, proceed to parse the input line
 	 * into tokens - label, opcode, operands string.
 	 */
-	if ((argtab == NULL) || (parse_line(splitLine, line) < 0) {
+	if ((argtab == NULL) || (parse_line(splitLine, line) < 0)) {
 		return FAILURE;
 	}
 
@@ -151,16 +150,16 @@ int setUpArguments (char *line, const char *macroName)
 
 int commentOutMacroCall(char *inputLine, FILE *outputfd)
 {
-	char *commentedLine = (char *) malloc((sizeof(inputLine) + (2 * sizeof(char)));
+	char *commentedLine = (char *) malloc((sizeof(inputLine) + (2 * sizeof(char))));
 
 	/*
 	 * Add a "." at the beginning of the input line to make it a comment
 	 * and write it at the end of the output file.
 	 */
 	if(commentedLine != NULL) {
-		memset(commentedLine, '\0', sizeof(commentedLine);
+		memset(commentedLine, '\0', sizeof(commentedLine));
 		strncpy(commentedLine,".", sizeof(char));
-		strncat(commentedLine, inputLine, sizeof(inputLine);
+		strncat(commentedLine, inputLine, sizeof(inputLine));
 
 		fseek(outputfd, 0, SEEK_END);
 		fwrite(commentedLine, sizeof(commentedLine), 1, outputfd);
