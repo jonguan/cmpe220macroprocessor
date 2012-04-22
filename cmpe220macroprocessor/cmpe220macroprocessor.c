@@ -32,6 +32,7 @@ deftab_t * deftab = NULL;
 namtab_t * namtab = NULL;
 argtab_t * argtab = NULL;
 
+
 /**
 * Function: printUsage
 * Description:
@@ -254,7 +255,7 @@ char* getline(FILE * inputFile)
 {
 	char * line = NULL;
 	char * argtab_val = NULL;
-	int arrayBufSize = ARGTAB_MAX_ARRAY_SIZE * sizeof(char *);
+	char str[8];
 	int n;
 
 	// Error check
@@ -267,16 +268,15 @@ char* getline(FILE * inputFile)
 	{
 		// get next line of macro definition from DEFTAB
 		line = deftab_get(deftab, deftabIndex);
-		currentLine = line;
+		strcpy_s(currentLine, sizeof(currentLine), line);
 		// substitute arguments from ARGTAB for positional notation  
 		for(n = 0; n < ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
 		{
-			char * str = "?";
 			char ntext[3]; 
 			_itoa(n, ntext, 10); // need to convert int n to char
-			strcat(str, ntext); // create "?n" as char
+			sprintf(str,"?%d",n); // create "?n" as char
 			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
-			strReplace(currentLine, arrayBufSize, str, argtab_val); // replaces "?n" with value found in ARGTAB
+			strReplace(currentLine, sizeof(currentLine), str, argtab_val); // replaces "?n" with value found in ARGTAB
 		}
 	}
 	else
