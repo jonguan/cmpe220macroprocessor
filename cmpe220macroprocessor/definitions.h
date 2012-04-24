@@ -29,7 +29,7 @@ int expand(FILE *inputFile, FILE *outputFile, const char *macroName);
 void printUsage(void);
 int getPositiveMin(int a, int b);
 void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
-int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char * argv[]);
+int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[]);
 
 // Declare global variables
 ///////////////////////////////////////////////////////////////////////////////////////////////

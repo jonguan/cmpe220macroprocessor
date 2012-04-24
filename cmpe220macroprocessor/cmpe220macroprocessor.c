@@ -70,17 +70,19 @@ void printUsage(void)
 */
 int main(int argc, char* argv[])
 {
-	char *inputFileName = NULL;
-	char *outputFileName = NULL;
+	//filenames of 24 characters max
+	char *inputFileName = NULL;// (char*)malloc(24*sizeof(char));
+	char *outputFileName = NULL;//(char*)malloc(24*sizeof(char));
 	int result;
 	errno_t rc;
-	FILE *inputFile = NULL;
-	FILE *outputFile = NULL;
+	FILE *inputFile;
+	FILE *outputFile;
+
 	if (VERBOSE)
 		printf("beginning cmpe220 macroprocessor\n");
 
 	/** HANDLE ARGUMENTS **/
-	result = parseInputCommand(inputFileName, outputFileName, argc, argv);
+	result = parseInputCommand(&inputFileName, &outputFileName, argc, argv);
 
 	if (result == FAILURE || argc < 3)
 	{
@@ -101,6 +103,10 @@ int main(int argc, char* argv[])
 			return FAILURE;
 		}
 
+		if (VERBOSE)
+		{
+			printf("input file is opened\n");
+		}
 		// Open OUTPUT file
 		//Output is the last operand (argc-1)
 		rc = fopen_s(&outputFile, outputFileName, "w");
@@ -111,14 +117,23 @@ int main(int argc, char* argv[])
 			return FAILURE;
 		}
 
+		if (VERBOSE)
+		{
+			printf("output file is opened\n");
+		}
+
+		// Cleanup names
+		//free(inputFileName);
+		//free(outputFileName);
+
 		// MACROPROCESSOR LOOP
 		///////////////////////////////////////////////////////////////////
-		EXPANDING = FALSE;
+ 		EXPANDING = FALSE;
 
 		// reset result
 		result = FAILURE;
 
-		while(strcmp(OPCODE, "END") != 0)
+		do
 		{
 			currentLine = getline(inputFile);
 
@@ -136,7 +151,7 @@ int main(int argc, char* argv[])
 				break;
 			}
 
-		}
+		}while(strcmp(OPCODE, "END") != 0);
 
 		// CLEANUP
 		////////////////////////////////////////////////////////////////////////////
@@ -159,15 +174,15 @@ int main(int argc, char* argv[])
 *    Prints the information to the user.
 *
 * Parameters:
-* inputFileName - char* filename
-* outputFileName - char* filename
+* inputFileName - pointer to char* filename
+* outputFileName - pointer to char* filename
 * argc from main
 * argv from main
 *
 * Returns:
 * SUCCESS (0) or FAILURE (-1)
 */
-int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char * argv[])
+int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[])
 {
 	int i;
 
@@ -206,7 +221,7 @@ int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char 
 				if(i+1 < argc) // make sure there's another argument
 				{
 					i++;
-					inputFileName = argv[i];
+					*inputFileName = argv[i];
 				}
 				else
 				{
@@ -221,7 +236,8 @@ int parseInputCommand(char *inputFileName, char *outputFileName, int argc, char 
 				if(i+1 < argc) // make sure there's another argument
 				{
 					i++;
-					outputFileName = argv[i];
+					//dereference
+				*outputFileName = argv[i];
 				}
 				else
 				{
