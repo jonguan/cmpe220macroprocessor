@@ -47,7 +47,7 @@ extern char* OPCODE;
 extern int deftabIndex;
 
 // Pointer to current line of input file
-extern char* currentLine;
+extern char currentLine[256];
 
 // Pointers to table structures
 extern deftab_t * deftab;

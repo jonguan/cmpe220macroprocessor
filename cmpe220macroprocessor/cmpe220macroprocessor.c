@@ -25,7 +25,7 @@ char* OPCODE = NULL;
 int deftabIndex;
 
 // Pointer to current line of input file
-char* currentLine = NULL;
+char currentLine [256];
 
 // Pointers to table structures
 deftab_t * deftab = NULL;
@@ -135,12 +135,18 @@ int main(int argc, char* argv[])
 
 		do
 		{
-			currentLine = getline(inputFile);
+			//Getline will fill currentLine buffer
+			getline(inputFile);
 
+			if(VERBOSE)
+			{
+				printf("currentLine is %s", currentLine);
+			}
+			
 			// Error check
-			if (currentLine == NULL)
+			/*if (currentLine[0] == '\0')
 				printf("ERROR in getLine\n");
-				break;
+				break;*/
 
 			result = processLine(inputFile, outputFile, currentLine);
 
@@ -298,7 +304,7 @@ char* getline(FILE * inputFile)
 	else
 	{
 		// read next line from input file;
-		fgets(currentLine,255,inputFile);
+		fgets(currentLine,sizeof(currentLine),inputFile);
 	}
 
 	return currentLine;

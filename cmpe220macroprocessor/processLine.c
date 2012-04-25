@@ -41,12 +41,6 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 	int result = FAILURE;
 	parse_info_t *parseInfo = parse_info_alloc();
 
-	// Error Check
-	if(strlen(macroLine) < kOpFlagSymStart)
-	{
-		return result;
-	}
-
 	// Get OPCODE (strtok)
 	if(parse_line(parseInfo, macroLine) == FAILURE)
 	{
@@ -57,9 +51,7 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		//set OPCODE
 		OPCODE = parseInfo->opcode;
 	}
-	//strncpy_s(opCode, (kOpFlagSymStart - kOpCodeStart), macroLine + kOpCodeStart, _TRUNCATE);
-
-
+	
 	/* Search NAMTAB for OPCODE*/
 
 	if (opCode != NULL)
