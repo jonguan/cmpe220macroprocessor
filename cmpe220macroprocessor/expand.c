@@ -88,7 +88,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 
 /*
  * setUpArguments:
- * Create ARGTAB with arguments from macro invocation.
+ * Set up ARGTAB with arguments from macro invocation.
  *
  * Parameters:
  *  - inputLine - input assembly program line to comment out
@@ -102,21 +102,23 @@ int setUpArguments (char *line, const char *macroName)
 {
 	int argCount = 0;
 	char *operand;
-	parse_info_t *splitLine;
-		
+	parse_info_t *splitLine = NULL;
+	char *nextToken = NULL;
 	
-	argtab = argtab_alloc();	// Create empty ARGTAB
+    splitLine = parse_info_alloc(); // create empty parse_info_t
 
 	/* 
 	 * If ARGTAB creation succeeded, proceed to parse the input line
 	 * into tokens - label, opcode, operands string.
 	 */
-	if ((argtab == NULL) || (parse_line(splitLine, line) < 0)) {
+	if ((argtab == NULL) || (splitLine == NULL) || (parse_line(splitLine, line) < 0)) {
+        parse_info_free(splitLine);
 		return FAILURE;
 	}
 
 	if (splitLine->isComment == TRUE) {		// Input line is a comment
-		return 0;
+        parse_info_free(splitLine);
+		return SUCCESS;
 	}
 
 	/*
@@ -124,16 +126,17 @@ int setUpArguments (char *line, const char *macroName)
 	 * Format of arguments in operands field: &op1,&op2,&op3,...
 	 * ARGTAB indexing starts at 1.
 	 */
-	operand = strtok(splitLine->operators, ",&");
+	operand = strtok_s(splitLine->operators, ",&", &nextToken);
 	while (operand != NULL){
 		argCount++;
 		if (argtab_add(argtab, argCount, operand) < 0) {
-			argtab_free(argtab);
+            parse_info_free(splitLine);
 			return FAILURE;
 		}
-		operand = strtok(NULL, ",&");
+		operand = strtok_s(NULL, ",&", &nextToken);
 	}
-		
+	
+    parse_info_free(splitLine);
 	return argCount;
 }
 
@@ -150,20 +153,30 @@ int setUpArguments (char *line, const char *macroName)
 
 int commentOutMacroCall(char *inputLine, FILE *outputfd)
 {
-	char *commentedLine = (char *) malloc((sizeof(inputLine) + (2 * sizeof(char))));
+    int bufferLen;
+	char *commentedLine;
+    
+    if(inputLine == NULL || outputfd == NULL)
+    {
+        return FAILURE;
+    }
+    
+    bufferLen = strlen(inputLine) + (2 * sizeof(char)) + 1;
+    commentedLine = (char *) malloc(bufferLen);
 
 	/*
 	 * Add a "." at the beginning of the input line to make it a comment
 	 * and write it at the end of the output file.
 	 */
 	if(commentedLine != NULL) {
-		memset(commentedLine, '\0', sizeof(commentedLine));
-		strncpy(commentedLine,".", sizeof(char));
-		strncat(commentedLine, inputLine, sizeof(inputLine));
+		memset(commentedLine, '\0', bufferLen);
+		strcpy_s(commentedLine, bufferLen, ".");
+		strcat_s(commentedLine, bufferLen - strlen(commentedLine), inputLine);
 
 		fseek(outputfd, 0, SEEK_END);
 		fwrite(commentedLine, sizeof(commentedLine), 1, outputfd);
 
+        free(commentedLine);
 		return SUCCESS;
 	}
 

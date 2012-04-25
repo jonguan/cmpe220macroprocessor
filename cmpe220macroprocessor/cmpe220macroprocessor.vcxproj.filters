@@ -66,5 +66,8 @@
     <ClCompile Include="processLine.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="define.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

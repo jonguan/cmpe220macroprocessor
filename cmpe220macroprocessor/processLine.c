@@ -37,7 +37,6 @@
 */
 int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 {
-	char opCode[8];
 	int result = FAILURE;
 	parse_info_t *parseInfo = parse_info_alloc();
 
@@ -45,21 +44,30 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 	if(parse_line(parseInfo, macroLine) == FAILURE)
 	{
 		printf("Error in parse_line.\n");
+        parse_info_free(parseInfo);
 		return FAILURE;
-	}else
+	}
+    else
 	{
-		//set OPCODE
-		OPCODE = parseInfo->opcode;
+        //set OPCODE
+        if(parseInfo->opcode)
+        {
+		    strcpy_s(OPCODE, sizeof(OPCODE), parseInfo->opcode);
+        }
+        else
+        {
+            sprintf_s(OPCODE, sizeof(OPCODE), "");
+        }
 	}
 	
 	/* Search NAMTAB for OPCODE*/
 
-	if (opCode != NULL)
+	if (namtab_get(namtab, parseInfo->opcode) != NULL)
 	{
 		//Call expand
-		result = expand(inputFile, outputFile, opCode);
+		result = expand(inputFile, outputFile, parseInfo->opcode);
 	}
-	else if (strcmp(opCode, "MACRO"))
+	else if (parseInfo->opcode != NULL && strncmp("MACRO", parseInfo->opcode, strlen("MACRO")) == 0)
 	{
 		//Call define
 		result = define(inputFile, outputFile, macroLine);
@@ -73,12 +81,13 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		// Error check
 		if (outputFile == NULL) {
 			fprintf(stderr, "Output file passed to processLine is null!\n");
+            parse_info_free(parseInfo);
 			return FAILURE;
 		}
 
 		// write line out
-		fprintf(outputFile, "inputLine");
-
+		fprintf(outputFile, currentLine);
+        result = SUCCESS;
 	}
 
 	// Memory cleanup

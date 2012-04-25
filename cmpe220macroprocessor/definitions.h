@@ -41,7 +41,7 @@ extern BOOL VERBOSE;
 extern BOOL EXPANDING; 
 
 // OPCODE pointer - to determine what the opcode currently is
-extern char* OPCODE;
+extern char OPCODE[16];
 
 // Pointer to current index of definitions table
 extern int deftabIndex;

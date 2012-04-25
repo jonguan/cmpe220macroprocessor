@@ -19,7 +19,7 @@ BOOL VERBOSE = FALSE;
 BOOL EXPANDING = FALSE; 
 
 // OPCODE pointer - to determine what the opcode currently is
-char* OPCODE = NULL;
+char OPCODE[16];
 
 // Pointer to current index of definitions table
 int deftabIndex;
@@ -129,6 +129,9 @@ int main(int argc, char* argv[])
 		// MACROPROCESSOR LOOP
 		///////////////////////////////////////////////////////////////////
  		EXPANDING = FALSE;
+        argtab = argtab_alloc();
+        deftab = deftab_alloc();
+        namtab = namtab_alloc();
 
 		// reset result
 		result = FAILURE;
@@ -157,10 +160,15 @@ int main(int argc, char* argv[])
 				break;
 			}
 
-		}while(strcmp(OPCODE, "END") != 0);
+		}while(strncmp("END", OPCODE, strlen("END")) != 0);
 
 		// CLEANUP
 		////////////////////////////////////////////////////////////////////////////
+
+        // de-allocate data structures
+        namtab_free(namtab);
+        deftab_free(deftab);
+        argtab_free(argtab);
 
 		// Close Files
 		fclose(inputFile);
@@ -294,9 +302,7 @@ char* getline(FILE * inputFile)
 		// substitute arguments from ARGTAB for positional notation  
 		for(n = 0; n < ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
 		{
-			char ntext[3]; 
-			_itoa(n, ntext, 10); // need to convert int n to char
-			sprintf(str,"?%d",n); // create "?n" as char
+			sprintf_s(str,sizeof(str),"?%d",n); // create "?n" as char
 			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
 			strReplace(currentLine, sizeof(currentLine), str, argtab_val); // replaces "?n" with value found in ARGTAB
 		}
@@ -308,168 +314,6 @@ char* getline(FILE * inputFile)
 	}
 
 	return currentLine;
-}
-
-/**
-* Function: define
-* Description:
-*  - Handles the definitions of macros. Enters information into NAMTAB and
-*    DEFTAB. Substitutes positional notation for parameters. Also, handles
-*    recursive MACRO declarations.
-* Parameters:
-*  - inputFile: File pointer to the already open input file.
-*  - outputFile: File pointer to the already open outputfile.
-*  - macroLine: The line of code that contains the MACRO directive (macro
-*    declaration).
-* Returns:
-*  - If successful, returns SUCCESS. Otherwise, returns FAILURE.
-*/
-int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
-{
-	parse_info_t * parse_info = NULL;
-	namtab_entry_t * namtab_entry = NULL;
-	argtab_t * tmp_argtab = NULL;
-	int argidx = 1;
-	int index = 0;
-	int level = 1;
-	int i = 0;
-	const char argDelim[] = ", ";
-	char * params = NULL;
-	char * token = NULL;
-	char * nextToken = NULL;
-	char * argReplace;
-	char argWith[16];
-	char * tmpString;
-	//TODO get rid of this - only until get line is implemented
-	int currentLineIndex = 1;
-	char dummyLines[][128] = {
-		"RDBUFF    MACRO   &INDEV, &BUFADR, &RECLTH",
-		".",
-		".         MACRO TO READ RECORD INTO BUFFER",
-		".",
-		"          CLEAR   X             CLEAR LOOP COUNTER",
-		"          CLEAR   A",
-		"          CLEAR   S",
-		"         +LDT    #4096          SET MAXIMUM RECORD LENGTH",
-		"          TD     =X'&INDEV'     TEST INPUT DEVICE",
-		"          JEQ     *-3           LOOP UNTIL READY",
-		"          RD     =X'&INDEV'     READ CHARACTER INTO REG A",
-		"          COMPR   A,S           TEST FOR END OF RECORD",
-		"          JEQ     *+11          EXIT LOOP IF EOR",
-		"          STCH    &BUFADR,X     STORE CHARACTER IN BUFFER",
-		"          TIXR    T             LOOP UNLESS MAXIMUM LENGTH",
-		"          JLT     *-19             HAS BEEN REACHED",
-		"          STX     &RECLTH       SAVE RECORD LENGTH",
-		"          MEND",
-	};
-	char * currentLine = dummyLines[0];
-
-	if(argtab == NULL || deftab == NULL || namtab == NULL)
-	{
-		// data structures not initialized
-		printf("ERROR - %s: Data structures not initialized!\n", __func__);
-		return FAILURE;
-	}
-	else if(inputFile == NULL || outputFile == NULL)
-	{
-		// bad file pointers
-		printf("ERROR - %s: Bad file pointer!\n", __func__);
-		return FAILURE;
-	}
-	else if(macroLine == NULL)
-	{
-		// null string for macro line
-		printf("ERROR - %s: Null string for macro line!\n", __func__);
-		return FAILURE;
-	}
-
-	// parse the macro line
-	parse_info = parse_info_alloc();
-	if(parse_line(parse_info, macroLine) != 0)
-	{
-		// something went wrong
-		parse_info_free(parse_info);
-		return FAILURE;
-	}
-
-	// make sure we're dealing with a macro definition line
-	if(parse_info->opcode == NULL || parse_info->label == NULL || strcmp(parse_info->opcode, "MACRO") != 0)
-	{
-		printf("ERROR: Invalid macro definition:\n%s\n\n", macroLine);
-		parse_info_free(parse_info);
-		return FAILURE;
-	}
-
-	// enter the macro name into NAMTAB
-	index = namtab_add(namtab, parse_info->label, 0, 0); // use 0 indices for now
-	namtab_entry = namtab_getIndex(namtab, index);
-
-	// enter macro prototype into DEFTAB
-	namtab_entry->deftabStart = deftab_add(deftab, macroLine);
-
-	// create a temporary local argtab for keeping track of parameters
-	tmp_argtab = argtab_alloc();
-	if(tmp_argtab == NULL)
-	{
-		printf("ERROR: Couldn't allocate memory for a temporary local argtab!\n");
-		parse_info_free(parse_info);
-		return FAILURE;
-	}
-	if(parse_info->operators)
-	{
-		params = _strdup(parse_info->operators);
-		token = strtok_s(params, argDelim, &nextToken);
-		while(token != NULL)
-		{
-			argtab_add(tmp_argtab, argidx++, token);
-			token = strtok_s(NULL, argDelim, &nextToken);
-		}
-		free(params);
-		params = NULL;
-	}
-
-	while(level > 0)
-	{
-		//TODO CALL GETLINE
-		currentLine = dummyLines[currentLineIndex++];
-		parse_info_clear(parse_info);
-		if(parse_line(parse_info, currentLine) != 0)
-		{
-			argtab_free(tmp_argtab);
-			parse_info_free(parse_info);
-			return FAILURE;
-		}
-
-		if(parse_info->isComment == FALSE)
-		{
-			//TODO substitute positional notation for parameters
-			tmpString = _strdup(currentLine);
-			for(i = 1; i < argidx; i++)
-			{
-				argReplace = argtab_get(tmp_argtab, i);
-				sprintf_s(argWith, sizeof(argWith), "?%d", i);
-				strReplace(tmpString, strlen(tmpString) + 1, argReplace, argWith);
-			}
-			index = deftab_add(deftab, tmpString);
-			free(tmpString);
-			if(parse_info->opcode && strcmp(parse_info->opcode, "MACRO") == 0)
-			{
-				level++;
-			}
-			else if(parse_info->opcode && strcmp(parse_info->opcode, "MEND") == 0)
-			{
-				level--;
-			}
-		}
-	}
-
-	// store in NAMTAB pointers to beginning and end of definition
-	namtab_entry->deftabEnd = index;
-
-	// free allocated memory
-	argtab_free(tmp_argtab);
-	parse_info_free(parse_info);
-	return SUCCESS;
 }
 
 /**
