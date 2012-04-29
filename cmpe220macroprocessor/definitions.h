@@ -23,6 +23,8 @@
 // Constants
 #define CURRENT_LINE_SIZE   (256)
 #define SHORT_STRING_SIZE   (16)
+#define UNIQUE_LABEL_DIGITS (2)
+#define MAX_UNIQUE_LABELS   (26 * 26)
 
 // Function Definitions
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,7 @@ int getPositiveMin(int a, int b);
 void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
 int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[]);
 void printOutputLine(FILE * outputFile, const char * line);
+void getUniquePrefix(int id, char * prefix, size_t bufferSize);
 
 // Declare global variables
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +54,9 @@ extern char OPCODE[SHORT_STRING_SIZE];
 // Expanded Label - to keep track of labels included with macro invocations
 extern BOOL EXPAND_LABEL;
 extern char EXPANDED_LABEL[SHORT_STRING_SIZE];
+
+// Unique ID - Used to identify a macro invocation, for unique label generation
+extern int  UNIQUE_ID;
 
 // Pointer to current index of definitions table
 extern int deftabIndex;

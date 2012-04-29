@@ -8,5 +8,6 @@
 void runTests(void);
 void debug_testDataStructures(void);
 void debug_testParser(void);
+void debug_testUniqueLabelGenerator(void);
 
 #endif // TEST_H_

@@ -25,6 +25,9 @@ char OPCODE[SHORT_STRING_SIZE];
 BOOL EXPAND_LABEL = FALSE;
 char EXPANDED_LABEL[SHORT_STRING_SIZE];
 
+// Unique ID - Used to identify a macro invocation, for unique label generation
+int  UNIQUE_ID = 0;
+
 // Pointer to current index of definitions table
 int deftabIndex;
 
@@ -219,8 +222,7 @@ int parseInputCommand(char **inputFileName, char **outputFileName, int argc, cha
 		}
 		if(strcmp("-t", argv[1]) == 0)
 		{
-			debug_testDataStructures();
-			debug_testParser();
+			runTests();
 			return SUCCESS;
 		}
 	}
@@ -420,7 +422,8 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 * Function: printOutputLine
 * Description:
 *  - Print the specified line to the output file, while also taking care of any
-*    pending labels that need to be included in expanded macro lines.
+*    pending labels that need to be included in expanded macro lines. Also takes
+*    care of any post-line processing, such as unique label generation.
 * Parameters:
 *  - outputFile - FILE pointer to output file.
 *  - line - Pointer to line of code that will be printed.
@@ -430,6 +433,8 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 void printOutputLine(FILE * outputFile, const char * line)
 {
     parse_info_t * parseInfo = NULL;
+    char tmpLine[CURRENT_LINE_SIZE];
+    char uniquePrefix[UNIQUE_LABEL_DIGITS + 2];
     if(outputFile != NULL && line != NULL)
     {
         parseInfo = parse_info_alloc();
@@ -452,11 +457,39 @@ void printOutputLine(FILE * outputFile, const char * line)
             memset(EXPANDED_LABEL, 0, sizeof(EXPANDED_LABEL));
             EXPAND_LABEL = FALSE;
         }
-        else
+        else // just print the line
         {
-            // just print the line
-            fprintf(outputFile, line);
+            // unique label generation
+            strcpy_s(tmpLine, sizeof(tmpLine), line);
+            memset(uniquePrefix, 0, sizeof(uniquePrefix));
+            getUniquePrefix(UNIQUE_ID, uniquePrefix, sizeof(uniquePrefix));
+            strReplace(tmpLine, sizeof(tmpLine), "$", uniquePrefix);
+            fprintf(outputFile, tmpLine);
         }
         parse_info_free(parseInfo);
+    }
+}
+
+/**
+* Function: getUniquePrefix
+* Description:
+*  - Given an integer representing a unique ID, returns the corresponding
+*    unique label prefix, a two-letter identifier.
+* Parameters:
+*  - id: Unique identifier in decimal form.
+*  - prefix: Pointer to string buffer for result
+*  - bufferSize: Size of the string buffer
+* Returns:
+*  - none
+*/
+void getUniquePrefix(int id, char * prefix, size_t bufferSize)
+{
+    char digit1 = 'A';
+    char digit2 = 'A';
+    if(id >= 0 && id < MAX_UNIQUE_LABELS && prefix != NULL)
+    {
+        digit1 += (id / 26);
+        digit2 += (id % 26);
+        sprintf_s(prefix, bufferSize, "$%c%c", digit1, digit2);
     }
 }

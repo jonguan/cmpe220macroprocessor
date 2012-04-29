@@ -76,6 +76,8 @@
   <ItemGroup>
     <None Include="Fig4-1.txt" />
     <None Include="ReadMe.txt" />
+    <None Include="Test1.txt" />
+    <None Include="TestUniqueLabels.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="argtab.h" />

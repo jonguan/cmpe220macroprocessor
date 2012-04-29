@@ -25,6 +25,7 @@ void runTests(void)
 {
     debug_testDataStructures();
     debug_testParser();
+    debug_testUniqueLabelGenerator();
 }
 
 void debug_testDataStructures(void)
@@ -144,7 +145,16 @@ void debug_testParser(void)
         }
         parse_info_free(parse_info);
     }
+}
 
-    printf("Press any ENTER to exit...");
-    getchar();
+void debug_testUniqueLabelGenerator(void)
+{
+    int i = 0;
+    char prefix[UNIQUE_LABEL_DIGITS + 2];
+    printf("\n%s: START UNIQUE LABEL GENERATOR TESTS\n\n", __func__);
+    for(i = 0; i < MAX_UNIQUE_LABELS; i++)
+    {
+        getUniquePrefix(i, prefix, sizeof(prefix));
+        printf("id=%d, prefix=%s\n", i, prefix);
+    }
 }

@@ -105,6 +105,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	}
 
 	EXPANDING = FALSE;
+    UNIQUE_ID++;        // increment invocation ID
 
 	return SUCCESS;
 }
