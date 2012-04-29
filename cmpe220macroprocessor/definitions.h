@@ -20,6 +20,10 @@
 #define SUCCESS 0
 #define FAILURE -1
 
+// Constants
+#define CURRENT_LINE_SIZE   (256)
+#define SHORT_STRING_SIZE   (16)
+
 // Function Definitions
 ////////////////////////////////////////////////////////////////////////////////////////
 char* getline(FILE *inputFile);
@@ -30,6 +34,7 @@ void printUsage(void);
 int getPositiveMin(int a, int b);
 void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
 int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[]);
+void printOutputLine(FILE * outputFile, const char * line);
 
 // Declare global variables
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,14 +45,18 @@ extern BOOL VERBOSE;
 // Expanding flag - for function expand
 extern BOOL EXPANDING; 
 
-// OPCODE pointer - to determine what the opcode currently is
-extern char OPCODE[16];
+// OPCODE - to determine what the opcode currently is
+extern char OPCODE[SHORT_STRING_SIZE];
+
+// Expanded Label - to keep track of labels included with macro invocations
+extern BOOL EXPAND_LABEL;
+extern char EXPANDED_LABEL[SHORT_STRING_SIZE];
 
 // Pointer to current index of definitions table
 extern int deftabIndex;
 
 // Pointer to current line of input file
-extern char currentLine[256];
+extern char currentLine[CURRENT_LINE_SIZE];
 
 // Pointers to table structures
 extern deftab_t * deftab;

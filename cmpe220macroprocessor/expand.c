@@ -41,16 +41,36 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	int argCount;
 	int endOfMacroDef;
 	namtab_entry_t *nameEntry;
+    parse_info_t * parseInfo;
 	
 	EXPANDING = TRUE;
 	
 	printf("Expanding Macro: %s ...\n", macroName);
 
     // check for null pointers
-    if(inputFileDes == NULL || outputFileDes == NULL || macroName == NULL)
+    if(inputFileDes == NULL || outputFileDes == NULL || macroName == NULL || currentLine == NULL)
     {
         return FAILURE;
     }
+
+    // parse the current line to check for a label in the macro invocation
+    parseInfo = parse_info_alloc();
+    if(parseInfo == NULL)
+    {
+        return FAILURE;
+    }
+    if(parse_line(parseInfo, currentLine) != 0)
+    {
+        parse_info_free(parseInfo);
+        return FAILURE;
+    }
+    if(parseInfo->label != NULL)
+    {
+        // there is a label
+        EXPAND_LABEL = TRUE;
+        strcpy_s(EXPANDED_LABEL, sizeof(EXPANDED_LABEL), parseInfo->label);
+    }
+    parse_info_free(parseInfo);
 
 	/* Create ARGTAB with arguments from macro invocation */
 	argCount = setUpArguments(currentLine, macroName);

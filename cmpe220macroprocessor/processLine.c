@@ -86,7 +86,7 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		}
 
 		// write line out
-		fprintf(outputFile, currentLine);
+        printOutputLine(outputFile, currentLine);
 
 		result = SUCCESS;
 	}

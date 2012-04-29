@@ -18,14 +18,18 @@ BOOL VERBOSE = FALSE;
 // Expanding flag - for function expand
 BOOL EXPANDING = FALSE; 
 
-// OPCODE pointer - to determine what the opcode currently is
-char OPCODE[16];
+// OPCODE - to determine what the opcode currently is
+char OPCODE[SHORT_STRING_SIZE];
+
+// Expanded Label - to keep track of labels included with macro invocations
+BOOL EXPAND_LABEL = FALSE;
+char EXPANDED_LABEL[SHORT_STRING_SIZE];
 
 // Pointer to current index of definitions table
 int deftabIndex;
 
 // Pointer to current line of input file
-char currentLine [256];
+char currentLine [CURRENT_LINE_SIZE];
 
 // Pointers to table structures
 deftab_t * deftab = NULL;
@@ -300,7 +304,7 @@ char* getline(FILE * inputFile)
 		line = deftab_get(deftab, deftabIndex);
 		strcpy_s(currentLine, sizeof(currentLine), line);
 		// substitute arguments from ARGTAB for positional notation  
-		for(n = 0; n < ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
+		for(n = 1; n <= ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
 		{
 			sprintf_s(str,sizeof(str),"?%d",n); // create "?n" as char
 			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
@@ -410,4 +414,49 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 	*dstptr = '\0'; // null termination
 	strcpy_s(string, bufsize, tmpString);
 	free(tmpString);
+}
+
+/**
+* Function: printOutputLine
+* Description:
+*  - Print the specified line to the output file, while also taking care of any
+*    pending labels that need to be included in expanded macro lines.
+* Parameters:
+*  - outputFile - FILE pointer to output file.
+*  - line - Pointer to line of code that will be printed.
+* Returns:
+*  - none
+*/
+void printOutputLine(FILE * outputFile, const char * line)
+{
+    parse_info_t * parseInfo = NULL;
+    if(outputFile != NULL && line != NULL)
+    {
+        parseInfo = parse_info_alloc();
+        if(parseInfo == NULL)
+        {
+            return;
+        }
+        if(parse_line(parseInfo, line) != 0)
+        {
+            parse_info_free(parseInfo);
+            return;
+        }
+
+        // check if we need to include a label in an expanded line
+        if(parseInfo->isComment == FALSE && EXPAND_LABEL == TRUE)
+        {
+            fprintf(outputFile, EXPANDED_LABEL);
+            line += strlen(EXPANDED_LABEL);
+            fprintf(outputFile, line);
+            memset(EXPANDED_LABEL, 0, sizeof(EXPANDED_LABEL));
+            EXPAND_LABEL = FALSE;
+        }
+        else
+        {
+            // just print the line
+            fprintf(outputFile, line);
+        }
+        parse_info_free(parseInfo);
+    }
 }
