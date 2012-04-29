@@ -23,6 +23,7 @@
 // local function definitions
 int setUpArguments (char *line, const char *macroName);
 int commentOutMacroCall(char *inputLine, FILE *outputfd);
+char *currentLabel = NULL;
 
 /*
  * expand:
@@ -38,39 +39,24 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd);
 int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)  
 {
 	char *line;
+	char *labelledLine;
 	int argCount;
 	int endOfMacroDef;
+	int bufferLen;
+	int sizeOfTAB; 
 	namtab_entry_t *nameEntry;
-    parse_info_t * parseInfo;
 	
 	EXPANDING = TRUE;
 	
-	printf("Expanding Macro: %s ...\n", macroName);
+	if(VERBOSE) {
+		printf("EXPAND: Expanding Macro: %s ...\n", macroName);
+	}
 
     // check for null pointers
-    if(inputFileDes == NULL || outputFileDes == NULL || macroName == NULL || currentLine == NULL)
+    if(inputFileDes == NULL || outputFileDes == NULL || macroName == NULL)
     {
         return FAILURE;
     }
-
-    // parse the current line to check for a label in the macro invocation
-    parseInfo = parse_info_alloc();
-    if(parseInfo == NULL)
-    {
-        return FAILURE;
-    }
-    if(parse_line(parseInfo, currentLine) != 0)
-    {
-        parse_info_free(parseInfo);
-        return FAILURE;
-    }
-    if(parseInfo->label != NULL)
-    {
-        // there is a label
-        EXPAND_LABEL = TRUE;
-        strcpy_s(EXPANDED_LABEL, sizeof(EXPANDED_LABEL), parseInfo->label);
-    }
-    parse_info_free(parseInfo);
 
 	/* Create ARGTAB with arguments from macro invocation */
 	argCount = setUpArguments(currentLine, macroName);
@@ -78,10 +64,6 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		return FAILURE;
 	}
 	
-	if(VERBOSE){
-		printf("Number of arguments for macro %s: %d\n", macroName, argCount);
-	}
-
 	/* Write macro invocation line to the output file as a comment */
 	if (commentOutMacroCall(currentLine, outputFileDes) == FAILURE) {
 		return FAILURE;
@@ -95,17 +77,33 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	if (nameEntry == NULL) {
 		return FAILURE;
 	}
-	deftabIndex = 1 + (nameEntry->deftabStart);  // First line is macro prototype!
+
+	deftabIndex = (nameEntry->deftabStart) + 1;  // First line is macro prototype!
 	endOfMacroDef = nameEntry->deftabEnd;
-		
+	
 	while (deftabIndex < endOfMacroDef) {	// Assumes the MACRO definition ends with MEND in DEFTAB!
 		line = getline(inputFileDes);
+
+		if (currentLabel != NULL) {
+			bufferLen = strlen(currentLabel) + strlen(line) + (2 * sizeof(char));
+			labelledLine = (char *) malloc(bufferLen);
+			memset(labelledLine, '\0', bufferLen);
+
+			sizeOfTAB = sizeof('\t');
+			strcpy_s(labelledLine, bufferLen, currentLabel);
+			strcat_s(labelledLine, bufferLen, &line[sizeOfTAB]+1);
+			strcpy_s(line, bufferLen, labelledLine);
+
+			currentLabel = NULL;
+			free(labelledLine);
+		}
+		
 		processLine(inputFileDes, outputFileDes, line);
 		deftabIndex++;
 	}
-
+	
 	EXPANDING = FALSE;
-    UNIQUE_ID++;        // increment invocation ID
+	UNIQUE_ID++;        // increment invocation ID
 
 	return SUCCESS;
 }
@@ -140,10 +138,18 @@ int setUpArguments (char *line, const char *macroName)
         parse_info_free(splitLine);
 		return FAILURE;
 	}
-
+	
 	if (splitLine->isComment == TRUE) {		// Input line is a comment
         parse_info_free(splitLine);
 		return SUCCESS;
+	}
+
+	/* 
+	 * If there is a label for the macro, use it as a label
+	 * for the first instruction in the macro definition, while expanding.
+	 */
+	if (splitLine->label != NULL) {
+		currentLabel = _strdup(splitLine->label);
 	}
 
 	/*
@@ -154,10 +160,13 @@ int setUpArguments (char *line, const char *macroName)
 	operand = strtok_s(splitLine->operators, ",& ", &nextToken);
 	while (operand != NULL){
 		argCount++;
+
+		operand = strtok(operand, " ");
 		if (argtab_add(argtab, argCount, operand) < 0) {
             parse_info_free(splitLine);
 			return FAILURE;
 		}
+	
 		operand = strtok_s(NULL, ",& ", &nextToken);
 	}
 	
@@ -186,7 +195,7 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
         return FAILURE;
     }
     
-    bufferLen = strlen(inputLine) + (2 * sizeof(char)) + 1;
+    bufferLen = strlen(inputLine) + (2 * sizeof(char));
     commentedLine = (char *) malloc(bufferLen);
 
 	/*
@@ -196,10 +205,7 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
 	if(commentedLine != NULL) {
 		memset(commentedLine, '\0', bufferLen);
 		strcpy_s(commentedLine, bufferLen, ".");
-		strcat_s(commentedLine, bufferLen - strlen(commentedLine), inputLine);
-
-	/*	fseek(outputfd, 0, SEEK_END);
-		fwrite(commentedLine, sizeof(commentedLine), 1, outputfd);*/
+		strcat_s(commentedLine, bufferLen, inputLine);
 
 		fprintf(outputfd, commentedLine);
 
