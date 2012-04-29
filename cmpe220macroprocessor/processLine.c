@@ -37,6 +37,7 @@
 */
 int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 {
+	int x;
 	int result = FAILURE;
 	parse_info_t *parseInfo = parse_info_alloc();
 
@@ -87,7 +88,8 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 
 		// write line out
 		fprintf(outputFile, currentLine);
-        result = SUCCESS;
+
+		result = SUCCESS;
 	}
 
 	// Memory cleanup

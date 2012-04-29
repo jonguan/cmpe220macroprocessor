@@ -45,21 +45,21 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	EXPANDING = TRUE;
 	
 	printf("Expanding Macro: %s ...\n", macroName);
+	/* Get macro prototype definition from DEFTAB */
+	line = deftab_get(deftab, deftabIndex); // do some error checking?
 	
-	/* Get first line of macro definition from DEFTAB */
-	line = getline(inputFileDes);
-	//printf("First line of definition for macro %s:\n", macroName);
-	//printf("%s\n", line);
-
 	/* Create ARGTAB with arguments from macro invocation */
-	argCount = setUpArguments(line, macroName);
+	argCount = setUpArguments(currentLine, macroName);
 	if (argCount < 0) {
 		return FAILURE;
 	}
-	//printf("Number of arguments for macro %s: %d\n", macroName, argCount);
+	
+	if(VERBOSE){
+		printf("Number of arguments for macro %s: %d\n", macroName, argCount);
+	}
 
 	/* Write macro invocation line to the output file as a comment */
-	if (commentOutMacroCall(line, outputFileDes) == FAILURE) {
+	if (commentOutMacroCall(currentLine, outputFileDes) == FAILURE) {
 		return FAILURE;
 	}
 
@@ -71,7 +71,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	if (nameEntry == NULL) {
 		return FAILURE;
 	}
-	deftabIndex = nameEntry->deftabStart;
+	deftabIndex = 1 + (nameEntry->deftabStart);  // First line is macro prototype!
 	endOfMacroDef = nameEntry->deftabEnd;
 		
 	while (deftabIndex < endOfMacroDef) {	// Assumes the MACRO definition ends with MEND in DEFTAB!
@@ -173,8 +173,10 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
 		strcpy_s(commentedLine, bufferLen, ".");
 		strcat_s(commentedLine, bufferLen - strlen(commentedLine), inputLine);
 
-		fseek(outputfd, 0, SEEK_END);
-		fwrite(commentedLine, sizeof(commentedLine), 1, outputfd);
+	/*	fseek(outputfd, 0, SEEK_END);
+		fwrite(commentedLine, sizeof(commentedLine), 1, outputfd);*/
+
+		fprintf(outputfd, commentedLine);
 
         free(commentedLine);
 		return SUCCESS;
