@@ -45,9 +45,13 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	EXPANDING = TRUE;
 	
 	printf("Expanding Macro: %s ...\n", macroName);
-	/* Get macro prototype definition from DEFTAB */
-	line = deftab_get(deftab, deftabIndex); // do some error checking?
-	
+
+    // check for null pointers
+    if(inputFileDes == NULL || outputFileDes == NULL || macroName == NULL)
+    {
+        return FAILURE;
+    }
+
 	/* Create ARGTAB with arguments from macro invocation */
 	argCount = setUpArguments(currentLine, macroName);
 	if (argCount < 0) {
@@ -126,14 +130,14 @@ int setUpArguments (char *line, const char *macroName)
 	 * Format of arguments in operands field: &op1,&op2,&op3,...
 	 * ARGTAB indexing starts at 1.
 	 */
-	operand = strtok_s(splitLine->operators, ",&", &nextToken);
+	operand = strtok_s(splitLine->operators, ",& ", &nextToken);
 	while (operand != NULL){
 		argCount++;
 		if (argtab_add(argtab, argCount, operand) < 0) {
             parse_info_free(splitLine);
 			return FAILURE;
 		}
-		operand = strtok_s(NULL, ",&", &nextToken);
+		operand = strtok_s(NULL, ",& ", &nextToken);
 	}
 	
     parse_info_free(splitLine);
