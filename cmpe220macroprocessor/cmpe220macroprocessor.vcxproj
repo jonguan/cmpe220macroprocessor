@@ -75,6 +75,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="Fig4-1.txt" />
+    <None Include="Fig4-8.txt" />
     <None Include="ReadMe.txt" />
     <None Include="Test1.txt" />
     <None Include="TestUniqueLabels.txt" />

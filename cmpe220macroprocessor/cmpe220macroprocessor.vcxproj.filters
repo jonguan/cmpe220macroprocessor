@@ -19,6 +19,7 @@
     <None Include="Fig4-1.txt" />
     <None Include="Test1.txt" />
     <None Include="TestUniqueLabels.txt" />
+    <None Include="Fig4-8.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
