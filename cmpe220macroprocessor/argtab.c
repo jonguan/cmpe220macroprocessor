@@ -7,6 +7,7 @@
 #include <string.h>
 #include "definitions.h"
 #include "argtab.h"
+#include "uthash\uthash.h"
 
 /**
  * Function: argtab_alloc

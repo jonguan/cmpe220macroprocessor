@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\uthash">
+      <UniqueIdentifier>{a9c97d0a-b4ce-4a46-840d-52c8f20c9dc1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -42,6 +45,18 @@
     </ClInclude>
     <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="uthash\utarray.h">
+      <Filter>Header Files\uthash</Filter>
+    </ClInclude>
+    <ClInclude Include="uthash\utstring.h">
+      <Filter>Header Files\uthash</Filter>
+    </ClInclude>
+    <ClInclude Include="uthash\uthash.h">
+      <Filter>Header Files\uthash</Filter>
+    </ClInclude>
+    <ClInclude Include="uthash\utlist.h">
+      <Filter>Header Files\uthash</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -88,6 +88,10 @@
     <ClInclude Include="parser.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test.h" />
+    <ClInclude Include="uthash\utarray.h" />
+    <ClInclude Include="uthash\uthash.h" />
+    <ClInclude Include="uthash\utlist.h" />
+    <ClInclude Include="uthash\utstring.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="argtab.c" />
