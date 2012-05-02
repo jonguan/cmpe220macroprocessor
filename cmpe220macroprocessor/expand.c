@@ -42,14 +42,14 @@ char *currentLabel = NULL;
 int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)  
 {
 	/* 
-		For nested ifs, we keep track of whether we're in IF or ELSE.
+		For nested ifs, we keep track of result of the IF expression evaluation
 		Global variable IFSTATEMENTLEVEL is a pointer to the current index in array
 	*/
+	BOOL shouldEvaluateSection = TRUE;
 	int ifExpressionResult;
 	int nestedIFArray[MAX_NESTED_IF_SIZE];
 	char *line;
 	char *labelledLine;
-	char *operand;
 	const char opDelim[] = "& ";
 	int argCount;
 	int endOfMacroDef;
@@ -147,14 +147,14 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			{
 				printf("ERROR: Failed to parse operands in IF statement.\n");
 				return FAILURE;
-			}else if(ifExpressionResult == TRUE)
+			}else 
 			{
-				nestedIFArray[IFSTATEMENTLEVEL] = "IF";
-			}else
-			{
-				nestedIFArray[IFSTATEMENTLEVEL] = "ELSE";
+				nestedIFArray[IFSTATEMENTLEVEL] = ifExpressionResult;
 			}
+			shouldEvaluateSection = ifExpressionResult;
 			
+			// skip over if line
+			continue;
 
 		}
 		else if(strcmp(parsedLine->opcode, "ENDIF") == SUCCESS)
@@ -165,18 +165,22 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 				printf("ERROR: Number of ENDIF Statements do not match with number of IF statements");
 				return FAILURE;
 			}
-			
+			shouldEvaluateSection = TRUE; 
+			continue;
 			
 		}
-		else if(strcmp(parsedLine->opcode, "ELSE") == SUCCESS && 
-			nestedIFArray[IFSTATEMENTLEVEL] == TRUE && 
-			IFSTATEMENTLEVEL > 0)
+		else if(strcmp(parsedLine->opcode, "ELSE") == SUCCESS && IFSTATEMENTLEVEL > 0)
 		{
-			//Process the line until endif
-			break;
+			//Process the next line until endif only if IF evaluation was false
+			shouldEvaluateSection = ! nestedIFArray[IFSTATEMENTLEVEL];
+			continue;
 		}
 
-		processLine(inputFileDes, outputFileDes, line);
+		if(shouldEvaluateSection)
+		{
+			processLine(inputFileDes, outputFileDes, line);
+		}
+	
 		deftabIndex++;
 	}
 	
