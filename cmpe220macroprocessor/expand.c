@@ -25,6 +25,7 @@
 int setUpArguments (char *line, const char *macroName, int maxArgs);
 int commentOutMacroCall(char *inputLine, FILE *outputfd);
 int getNumParameters(char *line, const char *macroName);
+int evaluateOperands(char *operands);
 char *currentLabel = NULL;
 
 /*
@@ -40,6 +41,12 @@ char *currentLabel = NULL;
  */
 int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)  
 {
+	/* 
+		For nested ifs, we keep track of whether we're in IF or ELSE.
+		Global variable IFSTATEMENTLEVEL is a pointer to the current index in array
+	*/
+	int ifExpressionResult;
+	int nestedIFArray[MAX_NESTED_IF_SIZE];
 	char *line;
 	char *labelledLine;
 	char *operand;
@@ -50,9 +57,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	int sizeOfTAB; 
 	namtab_entry_t *nameEntry;
 	parse_info_t *parsedLine = parse_info_alloc();
+	int i = 0;
 
 	EXPANDING = TRUE;
-	
+
 	if(VERBOSE) {
 		printf("EXPAND: Expanding Macro: %s ...\n", macroName);
 	}
@@ -88,6 +96,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	/*
 		Get number of parameters from macro definitino
 	*/
+	// Get macro definition line
 	line = getline(inputFileDes);
 	argCount = getNumParameters(line, macroName);
 
@@ -96,6 +105,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		return FAILURE;
 	}
 	
+	// Set up nested if array
+	
+	memset(nestedIFArray, '\0', MAX_NESTED_IF_SIZE);
+
 	// Increment deftabIndex to point to first line of definition
 	deftabIndex++;
 
@@ -123,22 +136,46 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			return FAILURE;
 		}
 
-		// Check first character for argument
-		if(parsedLine->label != NULL &&
-			*(parsedLine->label) == '&' && 
-			!isspace(*((parsedLine->label) + 1)) && 
-			strcmp("SET", parsedLine->opcode) == SUCCESS)
+		// Check for conditional expansion keywords - IF, ELSE, ENDIF, WHILE, ENDW
+		if(strcmp(parsedLine->opcode, "IF") == SUCCESS)
 		{
-			//Add to argtab
-			operand = strtok(parsedLine->label, opDelim);
-			if (argtab_add(argtab, argCount, operand) < 0) {
-				parse_info_free(parsedLine);
+			// Increment global variable
+			IFSTATEMENTLEVEL++;
+			// Evaluate operands to set local variable
+			ifExpressionResult = evaluateOperands(parsedLine->operators);
+			if(ifExpressionResult == FAILURE)
+			{
+				printf("ERROR: Failed to parse operands in IF statement.\n");
+				return FAILURE;
+			}else if(ifExpressionResult == TRUE)
+			{
+				nestedIFArray[IFSTATEMENTLEVEL] = "IF";
+			}else
+			{
+				nestedIFArray[IFSTATEMENTLEVEL] = "ELSE";
+			}
+			
+
+		}
+		else if(strcmp(parsedLine->opcode, "ENDIF") == SUCCESS)
+		{
+			//Check if global variable is less than 0
+			if(--IFSTATEMENTLEVEL < 0)
+			{
+				printf("ERROR: Number of ENDIF Statements do not match with number of IF statements");
 				return FAILURE;
 			}
-
-			//Increment argCount for next cond. variable, if exists
-			argCount++;
+			
+			
 		}
+		else if(strcmp(parsedLine->opcode, "ELSE") == SUCCESS && 
+			nestedIFArray[IFSTATEMENTLEVEL] == TRUE && 
+			IFSTATEMENTLEVEL > 0)
+		{
+			//Process the line until endif
+			break;
+		}
+
 		processLine(inputFileDes, outputFileDes, line);
 		deftabIndex++;
 	}
@@ -246,7 +283,8 @@ int getNumParameters(char *line, const char *macroName)
 	 * If ARGTAB creation succeeded, proceed to parse the input line
 	 * into tokens - label, opcode, operands string.
 	 */
-	if ((defLine == NULL) || (parse_line(defLine, line) < 0) || strcmp(defLine->opcode, macroName) != SUCCESS ) {
+	if ((defLine == NULL) || (parse_line(defLine, line) < 0) || 
+		strncmp(defLine->opcode, macroName, strlen(defLine->opcode)) != SUCCESS ) {
         parse_info_free(defLine);
 		return FAILURE;
 	}
@@ -311,3 +349,20 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
 	return FAILURE;
 }
 
+
+/*
+ * evaluateOperands:
+ * Returns result of evaluation of conditional macro expansion IF
+ *
+ * Parameters:
+ *  - operands - string containing ( comparision )
+ *  
+ * Returns:
+ *  - TRUE, true
+ *  - FALSE, if false
+ *  - FAILURE, for invalid syntaxe
+ */
+int evaluateOperands(char *operands)
+{
+	return FAILURE;
+}

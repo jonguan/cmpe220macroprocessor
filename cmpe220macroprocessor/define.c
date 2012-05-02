@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include "definitions.h"
 #include "parser.h"
 
@@ -103,6 +104,10 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 		parse_info_free(parse_info);
 		return FAILURE;
 	}
+	/*
+		Enter params into temp argtab
+		NOTE: argidx starts at 1, token is in format of &token
+	*/
 	if(parse_info->operators)
 	{
 		params = _strdup(parse_info->operators);
@@ -118,10 +123,10 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 
 	while(level > 0)
 	{
-		//TODO CALL GETLINE
+		//  GET Next LINE
 		currLine = getline(inputFile);
 		parse_info_clear(parse_info);
-		if(parse_line(parse_info, currentLine) != 0)
+		if(parse_line(parse_info, currentLine) != SUCCESS)
 		{
 			argtab_free(tmp_argtab);
 			parse_info_free(parse_info);
@@ -130,7 +135,20 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 
 		if(parse_info->isComment == FALSE)
 		{
-			//TODO substitute positional notation for parameters
+			//  Check for macro expansion variable
+			if (strcmp(parse_info->opcode, "SET"))
+			{
+				//Check if macro varialbe is in valid format
+				if(parse_info->label != NULL &&
+					*(parse_info->label) == '&' && 
+					!isspace(*((parse_info->label) + 1)) )
+				{
+					//Add to argTab
+					argtab_add(tmp_argtab, argidx++, parse_info->label);
+				}
+			}
+
+			// Substitute positional notation for parameters
 			tmpString = _strdup(currentLine);
 			for(i = 1; i < argidx; i++)
 			{

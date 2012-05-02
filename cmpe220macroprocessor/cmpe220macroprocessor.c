@@ -31,6 +31,9 @@ int  UNIQUE_ID = 0;
 // Pointer to current index of definitions table
 int deftabIndex;
 
+// If Statement level - For conditional macro expansion (nested ifs)
+int IFSTATEMENTLEVEL = 0;
+
 // Pointer to current line of input file
 char currentLine [CURRENT_LINE_SIZE];
 

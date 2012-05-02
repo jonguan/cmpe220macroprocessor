@@ -25,6 +25,7 @@
 #define SHORT_STRING_SIZE   (16)
 #define UNIQUE_LABEL_DIGITS (2)
 #define MAX_UNIQUE_LABELS   (26 * 26)
+#define MAX_NESTED_IF_SIZE  (20)
 
 // Function Definitions
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +64,9 @@ extern int deftabIndex;
 
 // Pointer to current line of input file
 extern char currentLine[CURRENT_LINE_SIZE];
+
+// If Statement level - For conditional macro expansion
+extern int IFSTATEMENTLEVEL;
 
 // Pointers to table structures
 extern deftab_t * deftab;
