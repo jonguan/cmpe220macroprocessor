@@ -19,6 +19,7 @@
 #define FALSE 0
 #define SUCCESS 0
 #define FAILURE -1
+#define SKIP -2
 
 // Constants
 #define CURRENT_LINE_SIZE   (256)
@@ -26,6 +27,7 @@
 #define UNIQUE_LABEL_DIGITS (2)
 #define MAX_UNIQUE_LABELS   (26 * 26)
 #define MAX_NESTED_IF_SIZE  (20)
+#define MAX_NESTED_WHILE_SIZE (8)
 
 // Function Definitions
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +67,6 @@ extern int deftabIndex;
 // Pointer to current line of input file
 extern char currentLine[CURRENT_LINE_SIZE];
 
-// If Statement level - For conditional macro expansion
-extern int IFSTATEMENTLEVEL;
 
 // Pointers to table structures
 extern deftab_t * deftab;
