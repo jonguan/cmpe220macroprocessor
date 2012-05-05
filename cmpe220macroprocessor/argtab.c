@@ -127,6 +127,28 @@ int argtab_set(argtab_t * table, const char * symbol, const char * value)
 }
 
 /**
+ * Function: argtab_addOrSet
+ * Description:
+ *  - Adds the entry to ARGTAB, if it doesn't exist. Otherwise, replaces the value.
+ * Parameters:
+ *  - table: Pointer to ARGTAB.
+ *  - symbol: Symbol string (key).
+ *  - value: Value associated with the symbol.
+ * Returns:
+ *  - If successful, returns SUCCESS. Otherwise, returns FAILURE.
+ */
+int argtab_addOrSet(argtab_t * table, const char * symbol, const char * value)
+{
+    int result = argtab_add(table, symbol, value);
+    if(result != SUCCESS)
+    {
+        result = argtab_set(table, symbol, value);
+    }
+
+    return result;
+}
+
+/**
  * Function: argtab_get
  * Description:
  *  - Retrieves the value associated with the given symbol.

@@ -246,6 +246,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	
 	EXPANDING = FALSE;
 	UNIQUE_ID++;        // increment invocation ID
+    argtab_clear(argtab); // also clear the argtab -- otherwise, screws up getline
 
 	// free memory
 	parse_info_free(parsedLine);
@@ -275,6 +276,8 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
     parse_info_t *splitDefLine = NULL;
 	char *nextInvToken = NULL;
     char *nextDefToken = NULL;
+    char tmpKey[ARGTAB_STRING_SIZE];
+    char tmpValue[ARGTAB_STRING_SIZE];
 	
     splitInvLine = parse_info_alloc(); // create empty parse_info_t
     splitDefLine = parse_info_alloc();
@@ -312,18 +315,50 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
         return FAILURE;
     }
 
-	/*
-	 * Fill ARGTAB with arguments from macro invocation.
-	 * Format of arguments in operands field: &op1,&op2,&op3,...
-	 * ARGTAB indexing starts at 1.
-	 */
-	operand = strtok_s(splitInvLine->operators, ", ", &nextInvToken);
-    defOperand = strtok_s(splitDefLine->operators, ", ", &nextDefToken);
-    while(operand != NULL && defOperand != NULL)
+    // clear the ARGTAB
+    argtab_clear(argtab);
+
+    if(splitDefLine->hasKeywordMacroParameters)
     {
-        argtab_add(argtab, defOperand, operand);
-        operand = strtok_s(NULL, ", ", &nextInvToken);
-        defOperand = strtok_s(NULL, ", ", &nextDefToken);
+        /*
+         * Keyword Macro Parameters are used, so construct ARGTAB from both
+         * macro definition (default values) and macro invocation (passed
+         * values).
+         */
+
+        // First, set the default values from the macro definition
+        defOperand = strtok_s(splitDefLine->operators, ", ", &nextDefToken);
+        while(defOperand != NULL)
+        {
+            splitKeyValuePair(defOperand, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue));
+            argtab_addOrSet(argtab, tmpKey, tmpValue);
+            defOperand = strtok_s(NULL, ", ", &nextDefToken);
+        }
+
+        // Next, set the values passed in to the macro invocation
+        operand = strtok_s(splitInvLine->operators, ", ", &nextInvToken);
+        while(operand != NULL)
+        {
+            splitKeyValuePair(operand, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue));
+            argtab_addOrSet(argtab, tmpKey, tmpValue);
+            operand = strtok_s(NULL, ", ", &nextInvToken);
+        }
+    }
+    else
+    {
+        /*
+	     * Fill ARGTAB with arguments from macro invocation.
+	     * Format of arguments in operands field: &op1,&op2,&op3,...
+	     * ARGTAB indexing starts at 1.
+	     */
+	    operand = strtok_s(splitInvLine->operators, ", ", &nextInvToken);
+        defOperand = strtok_s(splitDefLine->operators, ", ", &nextDefToken);
+        while(operand != NULL && defOperand != NULL)
+        {
+            argtab_add(argtab, defOperand, operand);
+            operand = strtok_s(NULL, ", ", &nextInvToken);
+            defOperand = strtok_s(NULL, ", ", &nextDefToken);
+        }
     }
 	
     parse_info_free(splitInvLine);

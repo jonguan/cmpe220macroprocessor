@@ -38,6 +38,7 @@ int expand(FILE *inputFile, FILE *outputFile, const char *macroName);
 void printUsage(void);
 int getPositiveMin(int a, int b);
 void strReplace(char * string, size_t bufsize, const char * replace, const char * with);
+void splitKeyValuePair(const char * string, char * key, size_t keysize, char * value, size_t valuesize);
 int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[]);
 void printOutputLine(FILE * outputFile, const char * line);
 void getUniquePrefix(int id, char * prefix, size_t bufferSize);

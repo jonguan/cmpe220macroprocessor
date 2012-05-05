@@ -83,6 +83,7 @@ void parse_info_clear(parse_info_t * parse_info)
     }
 
     parse_info->isComment = FALSE;
+    parse_info->hasKeywordMacroParameters = FALSE;
     if(parse_info->label)
     {
         free(parse_info->label);
@@ -175,6 +176,14 @@ int parse_line(parse_info_t * parse_info, const char * line)
             token++;
         }
         parse_info->operators = _strdup(token);
+    }
+
+    // at this point we've done the parsing, check to see if keyword macro parameters are used
+    if( parse_info->opcode != NULL &&
+        strncmp("MACRO", parse_info->opcode, strlen("MACRO")) == 0 &&
+        strstr(parse_info->operators, "=") != NULL )
+    {
+        parse_info->hasKeywordMacroParameters = TRUE;
     }
 
     free(tmp);

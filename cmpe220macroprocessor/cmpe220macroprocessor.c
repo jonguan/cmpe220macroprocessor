@@ -487,3 +487,57 @@ void getUniquePrefix(int id, char * prefix, size_t bufferSize)
         sprintf_s(prefix, bufferSize, "$%c%c", digit1, digit2);
     }
 }
+
+/**
+ * Function: spitKeyValuePair
+ * Description:
+ *  - Given a string in the format of "{x}={y}", splits into two tokens, where
+ *    {x} is the key and {y} is the value.
+ * Parameters:
+ *  - string: String containing key/value pair.
+ *  - key: Pointer to string buffer for key.
+ *  - keysize: Size of the string buffer for key.
+ *  - value: Pointer to string buffer for value.
+ *  - valuesize: Size of the string buffer for value.
+ * Returns:
+ *  - none
+ */
+void splitKeyValuePair(const char * string, char * key, size_t keysize, char * value, size_t valuesize)
+{
+    char * tmp;
+    char * tmp2;
+    char * token;
+    char * nextToken;
+    const char delimiters[] = "=";
+
+    if(string != NULL && key != NULL && value != NULL)
+    {
+        tmp = _strdup(string);
+        token = strtok_s(tmp, delimiters, &nextToken);
+        if(token != NULL)
+        {
+            if(*token != '&')
+            {
+                // key doesn't start w/ &, so prepend it
+                tmp2 = _strdup(token);
+                sprintf_s(key, keysize, "&%s", tmp2);
+                free(tmp2);
+            }
+            else
+            {
+                strcpy_s(key, keysize, token);
+            }
+            token = strtok_s(NULL, delimiters, &nextToken);
+            if(token != NULL)
+            {
+                strcpy_s(value, valuesize, token);
+            }
+            else
+            {
+                // value is blank
+                strcpy_s(value, valuesize, "");
+            }
+        }
+        free(tmp);
+    }
+}

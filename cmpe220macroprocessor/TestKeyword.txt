@@ -1,0 +1,50 @@
+COPY      START   0
+RDBUFF    MACRO   &INDEV=F1,&BUFADR=,&RECLTH=
+.
+.         MACRO TO READ RECORD INTO BUFFER
+.
+          CLEAR   X
+          CLEAR   A
+          CLEAR   S
+         +LDT    #4096
+          TD     =X'&INDEV'
+          JEQ     *-3
+          RD     =X'&INDEV'
+          COMPR   A,S
+          JEQ     *+11
+          STCH    &BUFADR,X
+          TIXR    T
+          JLT     *-19
+          STX     &RECLTH
+          MEND
+WRBUFF    MACRO   &OUTDEV=,&BUFADR=,&RECLTH=
+.
+.         MACRO TO WRITE RECORD FROM BUFFER
+.
+          CLEAR   X
+          LDT     &RECLTH
+          LDCH    &BUFADR,X
+          TD     =X'&OUTDEV'
+          JEQ     *-3
+          WD     =X'&OUTDEV'
+          TIXR    T
+          JLT     *-14
+          MEND
+.
+.         MAIN PROGRAM
+.
+FIRST     STL     RETADR
+CLOOP     RDBUFF  BUFADR=BUFFER,RECLTH=LENGTH
+          LDA     LENGTH
+          COMP   #0
+          JEQ     ENDFIL
+          WRBUFF  RECLTH=LENGTH,BUFADR=BUFFER,OUTDEV=05
+          J       CLOOP
+ENDFIL    WRBUFF  OUTDEV=05,BUFADR=EOF,RECLTH=THREE
+          J      @RETADR
+EOF       BYTE    C'EOF'
+THREE     WORD    3
+RETADR    RESW    1
+LENGTH    RESW    1
+BUFFER    RESB    4096
+          END     FIRST

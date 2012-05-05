@@ -10,6 +10,7 @@
 typedef struct
 {
    BOOL     isComment;
+   BOOL     hasKeywordMacroParameters;
    char *   label;
    char *   opcode;
    char *   operators;
