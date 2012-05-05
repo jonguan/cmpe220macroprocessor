@@ -308,13 +308,8 @@ char* getline(FILE * inputFile)
 		// get next line of macro definition from DEFTAB
 		line = deftab_get(deftab, deftabIndex);
 		strcpy_s(currentLine, sizeof(currentLine), line);
-		// substitute arguments from ARGTAB for positional notation  
-		for(n = 1; n <= ARGTAB_MAX_ARRAY_SIZE; n++) // iterate through ARGTAB
-		{
-			sprintf_s(str,sizeof(str),"?%d",n); // create "?n" as char
-			argtab_val = argtab_get(argtab, n); // gets the value from ARGTAB
-			strReplace(currentLine, sizeof(currentLine), str, argtab_val); // replaces "?n" with value found in ARGTAB
-		}
+		// substitute arguments from ARGTAB with values  
+        argtab_substituteValues(argtab, currentLine, sizeof(currentLine));
 	}
 	else
 	{

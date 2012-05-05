@@ -22,22 +22,11 @@
 argtab_t * argtab_alloc(void)
 {
     argtab_t * table = (argtab_t *) malloc(sizeof(argtab_t));
-    int arrayBufSize = ARGTAB_MAX_ARRAY_SIZE * sizeof(char *);
     if(table != NULL)
     {
-        // initialize to zero
-        memset(table, 0, sizeof(table));
-        table->array = (char **) malloc(arrayBufSize);
-        if(table->array)
-        {
-            memset(table->array, 0, arrayBufSize);
-        }
-        else
-        {
-            // oops, no memory for the array, so bail
-            free(table);
-            table = NULL;
-        }
+        // initialize values
+        table->size = 0;
+        table->data = NULL;
     }
 
     //printf("%s: New table @ 0x%08x\n", __func__, table);
@@ -57,12 +46,7 @@ void argtab_free(argtab_t * table)
 {
     if(table)
     {
-        if(table->array)
-        {
-            argtab_clear(table); // remove all elements
-            //printf("%s: Free array @ 0x%08x\n", __func__, table->array);
-            free(table->array);
-        }
+        argtab_clear(table);
         //printf("%s: Free table @ 0x%08x\n", __func__, table);
         free(table);
     }
@@ -71,44 +55,33 @@ void argtab_free(argtab_t * table)
 /**
  * Function: argtab_add
  * Description:
- *  - Adds the given symbol to the ARGTAB, as the specified argument number.
+ *  - Adds the given symbol to the ARGTAB, with the specified value.
  * Parameters:
  *  - table: Pointer to ARGTAB.
- *  - argnum: Argument number to add (1-based).
  *  - symbol: Symbol to add.
+ *  - value: Value associated with the symbol.
  * Returns:
- *  - If successful, returns array index (0-based) of the new entry (NOTE: not
- *    argument number!). Otherwise, returns -1.
+ *  - If successful, returns SUCCESS, otherwise returns FAILURE.
  */
-int argtab_add(argtab_t * table, int argnum, const char * symbol)
+int argtab_add(argtab_t * table, int id, const char * symbol, const char * value)
 {
-    int		result = -1;
-    int		bufsize;
-    char *	tmpData;
+    int	result = FAILURE;
+    struct argtab_data * element = NULL;
+    struct argtab_data * ht = NULL;
 
-    if( (table != NULL) && (table->array != NULL) &&
-        (argnum > 0) && (argnum <= ARGTAB_MAX_ARRAY_SIZE) &&
-        (symbol != NULL) )
+    if(table != NULL && symbol != NULL || value != NULL)
     {
-        // argnum is 1-based, while array index is 0-based
-        result = argnum - 1;
-
-        // allocate memory for string
-        bufsize = strlen(symbol) + 1;
-        tmpData = (char *) malloc(bufsize);
-
-        // copy string to new location
-        strcpy_s(tmpData, bufsize, symbol);
-
-        // add new string to array
-        // if overwriting, make sure to free the existing string
-        if(table->array[result] != NULL)
+        ht = table->data;
+        element = (struct argtab_data *) malloc(sizeof(struct argtab_data));
+        if(element != NULL)
         {
-            free(table->array[result]);
+            element->id = id;
+            strcpy_s(element->key, ARGTAB_STRING_SIZE, symbol);
+            strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
+            HASH_ADD_STR(ht, key, element);
+            table->size++;
+            result = SUCCESS;
         }
-        table->array[result] = tmpData;
-
-        //printf("%s: Added item %d @ 0x%08x = '%s'\n", __func__, result, table->array[result], table->array[result]);
     }
 
     return result;
@@ -117,22 +90,27 @@ int argtab_add(argtab_t * table, int argnum, const char * symbol)
 /**
  * Function: argtab_get
  * Description:
- *  - Retrieves the symbol associated with the given argument number.
+ *  - Retrieves the value associated with the given symbol.
  * Parameters:
  *  - table: Pointer to ARGTAB.
- *  - argnum: Argument number in ARGTAB (1-based).
+ *  - symbol: Symbol to look up.
  * Returns:
- *  - Pointer to string representing the symbol.
+ *  - Pointer to string representing the value associated with the symbol.
  */
-char * argtab_get(argtab_t * table, int argnum)
+char * argtab_get(argtab_t * table, const char * symbol)
 {
-    char *	result = NULL;
-    int		index = argnum -1;
+    char * result = NULL;
+    struct argtab_data * ht = NULL;
+    struct argtab_data * found = NULL;
 
-    if( (table != NULL) && (argnum > 0) && (argnum <= ARGTAB_MAX_ARRAY_SIZE) )
+    if(table && symbol)
     {
-
-        result = table->array[index];
+        ht = table->data;
+        HASH_FIND_STR(ht, symbol, found);
+        if(found)
+        {
+            result = found->value;
+        }
     }
 
     return result;
@@ -150,17 +128,44 @@ char * argtab_get(argtab_t * table, int argnum)
  */
 void argtab_clear(argtab_t * table)
 {
-    int i;
-
-    if(table && table->array)
+    struct argtab_data *ht, *i, *tmp;
+    if(table)
     {
-        for(i = 0; i < ARGTAB_MAX_ARRAY_SIZE; i++)
+        ht = table->data;
+        if(ht)
         {
-            if(table->array[i])
+            HASH_ITER(hh, ht, i, tmp)
             {
-                //printf("%s: Free item %d @ 0x%08x\n", __func__, i, table->array[i]);
-                free(table->array[i]);
-                table->array[i] = NULL;
+                free(i);
+            }
+        }
+    }
+}
+
+/**
+ * Function: argtab_substituteValues
+ * Description:
+ *  - Given an ARGTAB and a string buffer, replaces all keys in the
+ *    string with their corresponding values.
+ * Parameters:
+ *  - table: Pointer to ARGTAB.
+ *  - buffer: Pointer to string buffer.
+ *  - bufsize: Size fo the string buffer, in bytes.
+ * Returns:
+ *  - none
+ */
+void argtab_substituteValues(argtab_t * table, char * buffer, size_t bufsize)
+{
+    struct argtab_data *i, *tmp;
+    struct argtab_data *ht = NULL;
+    if(table && buffer)
+    {
+        ht = table->data;
+        if(ht)
+        {
+            HASH_ITER(hh, ht, i, tmp)
+            {
+                strReplace(buffer, bufsize, i->key, i->value);
             }
         }
     }

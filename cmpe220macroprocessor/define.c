@@ -39,8 +39,6 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 {
 	parse_info_t * parse_info = NULL;
 	namtab_entry_t * namtab_entry = NULL;
-	argtab_t * tmp_argtab = NULL;
-	int argidx = 1;
 	int index = 0;
 	int level = 1;
 	int i = 0;
@@ -96,31 +94,6 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 	// enter macro prototype into DEFTAB
 	namtab_entry->deftabStart = deftab_add(deftab, macroLine);
 
-	// create a temporary local argtab for keeping track of parameters
-	tmp_argtab = argtab_alloc();
-	if(tmp_argtab == NULL)
-	{
-		printf("ERROR: Couldn't allocate memory for a temporary local argtab!\n");
-		parse_info_free(parse_info);
-		return FAILURE;
-	}
-	/*
-		Enter params into temp argtab
-		NOTE: argidx starts at 1, token is in format of &token
-	*/
-	if(parse_info->operators)
-	{
-		params = _strdup(parse_info->operators);
-		token = strtok_s(params, argDelim, &nextToken);
-		while(token != NULL)
-		{
-			argtab_add(tmp_argtab, argidx++, token);
-			token = strtok_s(NULL, argDelim, &nextToken);
-		}
-		free(params);
-		params = NULL;
-	}
-
 	while(level > 0)
 	{
 		//  GET Next LINE
@@ -128,7 +101,6 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 		parse_info_clear(parse_info);
 		if(parse_line(parse_info, currentLine) != SUCCESS)
 		{
-			argtab_free(tmp_argtab);
 			parse_info_free(parse_info);
 			return FAILURE;
 		}
@@ -144,18 +116,12 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 					!isspace(*((parse_info->label) + 1)) )
 				{
 					//Add to argTab
-					argtab_add(tmp_argtab, argidx++, parse_info->label);
+                    argtab_add(argtab, 0, parse_info->label, parse_info->operators);
 				}
 			}
 
 			// Substitute positional notation for parameters
 			tmpString = _strdup(currentLine);
-			for(i = 1; i < argidx; i++)
-			{
-				argReplace = argtab_get(tmp_argtab, i);
-				sprintf_s(argWith, sizeof(argWith), "?%d", i);
-				strReplace(tmpString, strlen(tmpString) + 1, argReplace, argWith);
-			}
 			index = deftab_add(deftab, tmpString);
 			free(tmpString);
 			if(parse_info->opcode != NULL && strncmp("MACRO", parse_info->opcode, strlen("MACRO")) == 0)
@@ -173,7 +139,6 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 	namtab_entry->deftabEnd = index;
 
 	// free allocated memory
-	argtab_free(tmp_argtab);
 	parse_info_free(parse_info);
 	return SUCCESS;
 }
