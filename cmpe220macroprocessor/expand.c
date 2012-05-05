@@ -41,13 +41,23 @@ char *currentLabel = NULL;
  */
 int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)  
 {
+	
+	// If/WHILE Statement level - For conditional macro expansion
+	int IFSTATEMENTLEVEL = 0;
+	int WHILESTATEMENTLEVEL = 0;
 	/* 
 		For nested ifs, we keep track of result of the IF expression evaluation
 		Global variable IFSTATEMENTLEVEL is a pointer to the current index in array
+		
+		For nested whiles, we keep track of the definition line number in an array,
+		so that we can go back to that line when the while loops back. 
+		WHILESTATEMENTLEVEL is a pointer to the level of indirection in nested while loops.
 	*/
 	BOOL shouldEvaluateSection = TRUE;
 	int ifExpressionResult;
+	BOOL isWhileExpression = FALSE;
 	int nestedIFArray[MAX_NESTED_IF_SIZE];
+	int nestedWhileArray[MAX_NESTED_WHILE_SIZE];
 	char *line;
 	char *labelledLine;
 	const char opDelim[] = "& ";
@@ -136,36 +146,75 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			return FAILURE;
 		}
 
-		// Check for conditional expansion keywords - IF, ELSE, ENDIF, WHILE, ENDW
-		if(strcmp(parsedLine->opcode, "IF") == SUCCESS)
+		/* 
+			Check for conditional expansion keywords - IF, ELSE, ENDIF, WHILE, ENDW
+			Algorithm is as follows:
+			1. When line hits IF or WHILE, increment the respective counter
+			2. If is allowed to evaluate the entire section, then evaluate the expression
+			3. else set the array value to FALSE.
+			4. when endw or endif is hit, decrement the respective counter and restore the 
+			5. if an ELSE is hit, and allowed to evaluate the entire section, evaluate what follows until endif.
+			6. if else is hit and not allowed to evaluate the entire section, skip the section.
+		*/
+		if(strcmp(parsedLine->opcode, "IF") == SUCCESS || strcmp(parsedLine->opcode, "WHILE") == SUCCESS)
 		{
+			isWhileExpression = (strcmp(parsedLine->opcode, "WHILE") == SUCCESS);
+
 			// Increment global variable
-			IFSTATEMENTLEVEL++;
-			// Evaluate operands to set local variable
-			ifExpressionResult = evaluateOperands(parsedLine->operators);
+			if(isWhileExpression)
+				WHILESTATEMENTLEVEL++;
+			else
+				IFSTATEMENTLEVEL++;
+			
+			// Evaluate operands only if allowed to evaluate entire section
+			if(shouldEvaluateSection)
+				ifExpressionResult = evaluateOperands(parsedLine->operators);
+			else
+				ifExpressionResult = SKIP;
+
 			if(ifExpressionResult == FAILURE)
 			{
 				printf("ERROR: Failed to parse operands in IF statement.\n");
 				return FAILURE;
 			}else 
 			{
-				nestedIFArray[IFSTATEMENTLEVEL] = ifExpressionResult;
+				if(isWhileExpression)
+					nestedWhileArray[WHILESTATEMENTLEVEL] = ifExpressionResult;
+				else
+					nestedIFArray[IFSTATEMENTLEVEL] = ifExpressionResult;
 			}
-			shouldEvaluateSection = ifExpressionResult;
+			// Only evaluate section if it's true, otherwise skip
+			shouldEvaluateSection = (ifExpressionResult == TRUE);
 			
 			// skip over if line
 			continue;
 
 		}
-		else if(strcmp(parsedLine->opcode, "ENDIF") == SUCCESS)
+		else if(strcmp(parsedLine->opcode, "ENDIF") == SUCCESS || strcmp(parsedLine->opcode, "ENDW") == SUCCESS)
 		{
+			isWhileExpression = (strcmp(parsedLine->opcode, "ENDW") == SUCCESS);
+
+			// Increment global variable
+			if(isWhileExpression)
+				WHILESTATEMENTLEVEL--;
+			else
+				IFSTATEMENTLEVEL--;
+			
 			//Check if global variable is less than 0
-			if(--IFSTATEMENTLEVEL < 0)
+			if(IFSTATEMENTLEVEL < 0 || WHILESTATEMENTLEVEL < 0)
 			{
-				printf("ERROR: Number of ENDIF Statements do not match with number of IF statements");
+				printf("ERROR: Number of ENDIF/ENDW Statements do not match with number of IF/WHILE statements");
 				return FAILURE;
 			}
-			shouldEvaluateSection = TRUE; 
+
+			// Resets shouldEvaluateSection to the value from before the if/while started
+			// IF/WHILE STATEMENT LEVELs were decremented before this section
+			if (isWhileExpression)
+				shouldEvaluateSection = (nestedWhileArray[WHILESTATEMENTLEVEL] == TRUE);
+			else
+			{
+				shouldEvaluateSection = (nestedIFArray[IFSTATEMENTLEVEL] == TRUE);
+			}
 			continue;
 			
 		}
@@ -173,10 +222,14 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		{
 			//Process the next line until endif only if IF evaluation was false
 			shouldEvaluateSection = ! nestedIFArray[IFSTATEMENTLEVEL];
+
+			//Replace the value inside the nestedIFArray with the new value in case a new if/endif disrupts parsing
+			nestedIFArray[IFSTATEMENTLEVEL] = shouldEvaluateSection;
+
 			continue;
 		}
 
-		if(shouldEvaluateSection)
+		if(shouldEvaluateSection == TRUE)
 		{
 			processLine(inputFileDes, outputFileDes, line);
 		}
