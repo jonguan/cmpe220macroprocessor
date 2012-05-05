@@ -292,8 +292,6 @@ char* getline(FILE * inputFile)
 {
 	char * line = NULL;
 	char * argtab_val = NULL;
-	char str[8];
-	int n;
 
 	// Error check
 	if (inputFile == NULL) {

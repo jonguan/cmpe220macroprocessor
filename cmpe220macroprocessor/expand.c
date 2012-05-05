@@ -22,7 +22,7 @@
 #include "parser.h"
 
 // local function definitions
-int setUpArguments (char *line, const char *macroName, int maxArgs);
+int setUpArguments (const char * macroDef, const char *line, const char *macroName, int maxArgs);
 int commentOutMacroCall(char *inputLine, FILE *outputfd);
 int getNumParameters(char *line, const char *macroName);
 int evaluateOperands(char *operands);
@@ -60,6 +60,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	int nestedWhileArray[MAX_NESTED_WHILE_SIZE];
 	char *line;
 	char *labelledLine;
+    char *macroInvocation;
 	const char opDelim[] = "& ";
 	int argCount;
 	int endOfMacroDef;
@@ -84,7 +85,9 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 
 	
 	/* Write macro invocation line to the output file as a comment */
-	if (commentOutMacroCall(currentLine, outputFileDes) == FAILURE) {
+    macroInvocation = _strdup(currentLine);
+	if (commentOutMacroCall(macroInvocation, outputFileDes) == FAILURE) {
+        free(macroInvocation);
 		return FAILURE;
 	}
 
@@ -94,6 +97,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	 */
 	nameEntry = namtab_get(namtab, macroName);
 	if (nameEntry == NULL) {
+        free(macroInvocation);
 		return FAILURE;
 	}
 
@@ -111,9 +115,11 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	argCount = getNumParameters(line, macroName);
 
 	/* Create ARGTAB with arguments from macro invocation */
-	if (setUpArguments(currentLine, macroName, argCount) == FAILURE) {
+	if (setUpArguments(macroInvocation, line, macroName, argCount) == FAILURE) {
+        free(macroInvocation);
 		return FAILURE;
 	}
+    free(macroInvocation);
 	
 	// Set up nested if array
 	
@@ -176,7 +182,8 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			{
 				printf("ERROR: Failed to parse operands in IF statement.\n");
 				return FAILURE;
-			}else 
+			}
+            else 
 			{
 				if(isWhileExpression)
 					nestedWhileArray[WHILESTATEMENTLEVEL] = ifExpressionResult;
@@ -260,57 +267,67 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
  *  - 0, if inputLine is a comment or if no arguments found in macro invocation OR
  *  - -1, for all FAILURE cases
  */
-int setUpArguments (char *line, const char *macroName, int maxArgs)
+int setUpArguments (const char *currLine, const char *macroDef, const char *macroName, int maxArgs)
 {
 	int argCount = 0;
-	char *operand;
-	parse_info_t *splitLine = NULL;
-	char *nextToken = NULL;
+	char *operand = NULL, *defOperand = NULL;
+	parse_info_t *splitInvLine = NULL;
+    parse_info_t *splitDefLine = NULL;
+	char *nextInvToken = NULL;
+    char *nextDefToken = NULL;
 	
-    splitLine = parse_info_alloc(); // create empty parse_info_t
+    splitInvLine = parse_info_alloc(); // create empty parse_info_t
+    splitDefLine = parse_info_alloc();
 
 	/* 
 	 * If ARGTAB creation succeeded, proceed to parse the input line
 	 * into tokens - label, opcode, operands string.
 	 */
-	if ((argtab == NULL) || (splitLine == NULL) || (parse_line(splitLine, line) < 0)) {
-        parse_info_free(splitLine);
+	if ((argtab == NULL) || (splitInvLine == NULL) || (parse_line(splitInvLine, currLine) < 0) ||
+        (splitDefLine == NULL) || (parse_line(splitDefLine, macroDef) < 0)) {
+        parse_info_free(splitInvLine);
+        parse_info_free(splitDefLine);
 		return FAILURE;
 	}
 	
-	if (splitLine->isComment == TRUE) {		// Input line is a comment
-        parse_info_free(splitLine);
+	if (splitDefLine->isComment == TRUE) {		// Input line is a comment
+        parse_info_free(splitInvLine);
+        parse_info_free(splitDefLine);
 		return SUCCESS;
 	}
 
 	/* 
-	 * If there is a label for the macro, use it as a label
+	 * If there is a label for the macro invocation, use it as a label
 	 * for the first instruction in the macro definition, while expanding.
 	 */
-	if (splitLine->label != NULL) {
-		currentLabel = _strdup(splitLine->label);
+	if (splitDefLine->label != NULL) {
+		currentLabel = _strdup(splitInvLine->label);
 	}
+
+    // make sure we have operators
+    if(splitInvLine->operators == NULL || splitDefLine->operators == NULL)
+    {
+        parse_info_free(splitInvLine);
+        parse_info_free(splitDefLine);
+        return FAILURE;
+    }
 
 	/*
 	 * Fill ARGTAB with arguments from macro invocation.
 	 * Format of arguments in operands field: &op1,&op2,&op3,...
 	 * ARGTAB indexing starts at 1.
 	 */
-	operand = strtok_s(splitLine->operators, ",& ", &nextToken);
-
-	// Null operands are now allowed for cases of cond. expansion
-	for (argCount = 0; argCount < maxArgs; argCount ++){
-		
-		operand = strtok(operand, " ");
-		if (argtab_add(argtab, argCount, operand) < 0) {
-            parse_info_free(splitLine);
-			return FAILURE;
-		}
+	operand = strtok_s(splitInvLine->operators, ", ", &nextInvToken);
+    defOperand = strtok_s(splitDefLine->operators, ", ", &nextDefToken);
+    while(operand != NULL && defOperand != NULL)
+    {
+        argtab_add(argtab, defOperand, operand);
+        operand = strtok_s(NULL, ", ", &nextInvToken);
+        defOperand = strtok_s(NULL, ", ", &nextDefToken);
+    }
 	
-		operand = strtok_s(NULL, ",& ", &nextToken);
-	}
-	
-    parse_info_free(splitLine);
+    parse_info_free(splitInvLine);
+    parse_info_free(splitDefLine);
 	return argCount;
 }
 
@@ -341,7 +358,7 @@ int getNumParameters(char *line, const char *macroName)
 	 * into tokens - label, opcode, operands string.
 	 */
 	if ((defLine == NULL) || (parse_line(defLine, line) < 0) || 
-		strncmp(defLine->opcode, macroName, strlen(defLine->opcode)) != SUCCESS ) {
+		strncmp(defLine->label, macroName, strlen(defLine->opcode)) != SUCCESS ) {
         parse_info_free(defLine);
 		return FAILURE;
 	}

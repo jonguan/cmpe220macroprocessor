@@ -46,8 +46,6 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 	char * params = NULL;
 	char * token = NULL;
 	char * nextToken = NULL;
-	char * argReplace;
-	char argWith[16];
 	char * tmpString;
     char * currLine;
 
@@ -116,7 +114,7 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 					!isspace(*((parse_info->label) + 1)) )
 				{
 					//Add to argTab
-                    argtab_add(argtab, 0, parse_info->label, parse_info->operators);
+                    argtab_add(argtab, parse_info->label, parse_info->operators);
 				}
 			}
 

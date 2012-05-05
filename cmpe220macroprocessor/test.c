@@ -62,18 +62,15 @@ void debug_testDataStructures(void)
     /* ARGTAB TESTS */
     printf("\n%s: START ARGTAB TESTS\n\n", __func__);
     argtab = argtab_alloc();
-    argtab_add(argtab, 1, "ARGUMENT_ONE");
-    argtab_add(argtab, 2, "ARGUMENT_TWO");
-    argtab_add(argtab, 3, "ARGUMENT_THREE");
+    argtab_add(argtab, "ONE", "ARGUMENT_ONE");
+    argtab_add(argtab, "TWO", "ARGUMENT_TWO");
+    argtab_add(argtab, "THREE", "ARGUMENT_THREE");
     printf("%s: Testing with invalid values\n", __func__);
-    argtab_add(NULL, 1, "Oops!");
-    argtab_add(argtab, 0, "Another oops!");
-    argtab_add(argtab, 1, "minimum value");
-    argtab_add(argtab, ARGTAB_MAX_ARRAY_SIZE, "max value");
-    argtab_add(argtab, ARGTAB_MAX_ARRAY_SIZE + 1, "out of bounds");
-    argtab_add(argtab, -1, "out of bounds");
-    string = argtab_get(argtab, 2);
-    printf("%s: Getting argument %d = '%s'\n", __func__, 2, string);
+    argtab_add(NULL, "ONE", "Oops!");
+    argtab_add(argtab, NULL, "Another oops!");
+    argtab_add(argtab, "ONE1", "minimum value");
+    string = argtab_get(argtab, "TWO");
+    printf("%s: Getting argument %s = '%s'\n", __func__, "TWO", string);
 
     /* NAMTAB TESTS */
     printf("\n%s: START NAMTAB TESTS\n\n", __func__);

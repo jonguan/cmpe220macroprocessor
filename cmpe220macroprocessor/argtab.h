@@ -11,7 +11,6 @@
 
 struct argtab_data
 {
-    int             id;
     char            key[ARGTAB_STRING_SIZE];
     char            value[ARGTAB_STRING_SIZE];
     UT_hash_handle  hh;
@@ -26,8 +25,9 @@ typedef struct
 
 argtab_t *	argtab_alloc(void);
 void        argtab_free(argtab_t * table);
-int         argtab_add(argtab_t * table, int id, const char * symbol, const char * value);
+int         argtab_add(argtab_t * table, const char * symbol, const char * value);
 char *      argtab_get(argtab_t * table, const char * symbol);
+int         argtab_set(argtab_t * table, const char * symbol, const char * value);
 void        argtab_clear(argtab_t * table);
 void        argtab_substituteValues(argtab_t * table, char * buffer, size_t bufsize);
 

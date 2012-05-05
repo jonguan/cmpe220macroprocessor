@@ -63,23 +63,62 @@ void argtab_free(argtab_t * table)
  * Returns:
  *  - If successful, returns SUCCESS, otherwise returns FAILURE.
  */
-int argtab_add(argtab_t * table, int id, const char * symbol, const char * value)
+int argtab_add(argtab_t * table, const char * symbol, const char * value)
 {
     int	result = FAILURE;
     struct argtab_data * element = NULL;
-    struct argtab_data * ht = NULL;
+    struct argtab_data ** ht = NULL;
 
-    if(table != NULL && symbol != NULL || value != NULL)
+    if(table != NULL && symbol != NULL && value != NULL)
     {
-        ht = table->data;
+        ht = &(table->data);
+        HASH_FIND_STR(*ht, symbol, element);
+        if(element)
+        {
+            // hash key already exists
+            return FAILURE;
+        }
+
+        // hash key is unique
         element = (struct argtab_data *) malloc(sizeof(struct argtab_data));
         if(element != NULL)
         {
-            element->id = id;
             strcpy_s(element->key, ARGTAB_STRING_SIZE, symbol);
             strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
-            HASH_ADD_STR(ht, key, element);
+            HASH_ADD_STR(*ht, key, element);
             table->size++;
+            result = SUCCESS;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Function: argtab_set
+ * Description:
+ *  - Sets the value of the given symbol already in ARGTAB.
+ * Parameters:
+ *  - table: Pointer to ARGTAB.
+ *  - symbol: Symbol to modify.
+ *  - value: Value associated with the symbol.
+ * Returns:
+ *  - If successful, returns SUCCESS, otherwise returns FAILURE.
+ */
+int argtab_set(argtab_t * table, const char * symbol, const char * value)
+{
+    int	result = FAILURE;
+    struct argtab_data * element = NULL;
+    struct argtab_data ** ht = NULL;
+
+    if(table != NULL && symbol != NULL && value != NULL)
+    {
+        ht = &(table->data);
+        HASH_FIND_STR(*ht, symbol, element);
+        if(element)
+        {
+            // hash key found
+            strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
             result = SUCCESS;
         }
     }
@@ -100,13 +139,13 @@ int argtab_add(argtab_t * table, int id, const char * symbol, const char * value
 char * argtab_get(argtab_t * table, const char * symbol)
 {
     char * result = NULL;
-    struct argtab_data * ht = NULL;
+    struct argtab_data ** ht = NULL;
     struct argtab_data * found = NULL;
 
     if(table && symbol)
     {
-        ht = table->data;
-        HASH_FIND_STR(ht, symbol, found);
+        ht = &(table->data);
+        HASH_FIND_STR(*ht, symbol, found);
         if(found)
         {
             result = found->value;
@@ -128,14 +167,15 @@ char * argtab_get(argtab_t * table, const char * symbol)
  */
 void argtab_clear(argtab_t * table)
 {
-    struct argtab_data *ht, *i, *tmp;
+    struct argtab_data **ht, *i, *tmp;
     if(table)
     {
-        ht = table->data;
+        ht = &(table->data);
         if(ht)
         {
-            HASH_ITER(hh, ht, i, tmp)
+            HASH_ITER(hh, *ht, i, tmp)
             {
+                HASH_DEL(*ht, i);
                 free(i);
             }
         }
@@ -157,13 +197,13 @@ void argtab_clear(argtab_t * table)
 void argtab_substituteValues(argtab_t * table, char * buffer, size_t bufsize)
 {
     struct argtab_data *i, *tmp;
-    struct argtab_data *ht = NULL;
+    struct argtab_data **ht = NULL;
     if(table && buffer)
     {
-        ht = table->data;
+        ht = &(table->data);
         if(ht)
         {
-            HASH_ITER(hh, ht, i, tmp)
+            HASH_ITER(hh, *ht, i, tmp)
             {
                 strReplace(buffer, bufsize, i->key, i->value);
             }
