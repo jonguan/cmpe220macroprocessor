@@ -72,6 +72,15 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		//Call define
 		result = define(inputFile, outputFile, macroLine);
 	}
+	else if(strcmp(parseInfo->opcode, "SET") == SUCCESS)
+	{
+		if(parseInfo->label != NULL)
+		{
+			//label contains the variable
+			argtab_add(argtab, parseInfo->label, parseInfo->operators);
+
+		}
+	}
 	else
 	{
 		//write source line to expanded file

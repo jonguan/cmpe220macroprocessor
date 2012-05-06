@@ -157,8 +157,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			Algorithm is as follows:
 			1. When line hits IF or WHILE, increment the respective counter
 			2. If is allowed to evaluate the entire section, then evaluate the expression
-			3. else set the array value to FALSE.
-			4. when endw or endif is hit, decrement the respective counter and restore the 
+			3. else set the array value to SKIP.
+			4. when endif is hit, decrement the respective counter and restore the previous result
+			4A.If endw is hit, evaluate the while expression again.  if result is still good, loop
+			4B.If while result is bad, then skip to the endw line, decrement counter, and restore previous while result.
 			5. if an ELSE is hit, and allowed to evaluate the entire section, evaluate what follows until endif.
 			6. if else is hit and not allowed to evaluate the entire section, skip the section.
 		*/
@@ -186,7 +188,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
             else 
 			{
 				if(isWhileExpression)
-					nestedWhileArray[WHILESTATEMENTLEVEL] = ifExpressionResult;
+					nestedWhileArray[WHILESTATEMENTLEVEL] = deftabIndex;
 				else
 					nestedIFArray[IFSTATEMENTLEVEL] = ifExpressionResult;
 			}
@@ -194,6 +196,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			shouldEvaluateSection = (ifExpressionResult == TRUE);
 			
 			// skip over if line
+			deftabIndex++;
 			continue;
 
 		}
@@ -201,11 +204,9 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		{
 			isWhileExpression = (strcmp(parsedLine->opcode, "ENDW") == SUCCESS);
 
-			// Increment global variable
-			if(isWhileExpression)
-				WHILESTATEMENTLEVEL--;
-			else
-				IFSTATEMENTLEVEL--;
+			// Decrement global variable
+			
+			IFSTATEMENTLEVEL--;
 			
 			//Check if global variable is less than 0
 			if(IFSTATEMENTLEVEL < 0 || WHILESTATEMENTLEVEL < 0)
@@ -217,11 +218,28 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			// Resets shouldEvaluateSection to the value from before the if/while started
 			// IF/WHILE STATEMENT LEVELs were decremented before this section
 			if (isWhileExpression)
-				shouldEvaluateSection = (nestedWhileArray[WHILESTATEMENTLEVEL] == TRUE);
+			{
+				//If the while expression evaluated to false, break out of the loop
+				if(shouldEvaluateSection == SKIP)
+				{
+					WHILESTATEMENTLEVEL--;
+				}else if(shouldEvaluateSection == FALSE)
+				{
+					WHILESTATEMENTLEVEL--;
+					shouldEvaluateSection = TRUE;
+				}
+				else{
+					//While statements need to loop back if still true
+					deftabIndex = nestedWhileArray[WHILESTATEMENTLEVEL];
+				}
+				
+			}
 			else
 			{
 				shouldEvaluateSection = (nestedIFArray[IFSTATEMENTLEVEL] == TRUE);
 			}
+
+			deftabIndex++;
 			continue;
 			
 		}
@@ -233,8 +251,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			//Replace the value inside the nestedIFArray with the new value in case a new if/endif disrupts parsing
 			nestedIFArray[IFSTATEMENTLEVEL] = shouldEvaluateSection;
 
+			deftabIndex++;
 			continue;
 		}
+	
 
 		if(shouldEvaluateSection == TRUE)
 		{
@@ -489,6 +509,7 @@ int evaluateOperands(char *operands)
 		if(count == 2) rightoperand = _strdup(val);
 		count++;
         ptr += n;
+		// skip spaces
         if ( *ptr != ' ' ) break;
         ++ptr;
     }
@@ -496,7 +517,7 @@ int evaluateOperands(char *operands)
 	memmove(leftoperand, leftoperand+1, strlen(leftoperand)); // remove the left parentheses from the leftoperand
 	rightoperand[strlen(rightoperand)-1] = 0; // remove the right parentheses from the rightoperand
 
-	leftoperand = argtab_get(argtab, leftoperand); //  get the value of leftoperand from argtab
+	//leftoperand = argtab_get(argtab, leftoperand); //  get the value of leftoperand from argtab
 	
 	// this series of if/else statements will evaluate the conditional statement and return TRUE or FALSE
 	if(strcmp(middleoperand,"EQ") == 0)
