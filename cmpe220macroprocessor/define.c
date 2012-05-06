@@ -105,19 +105,7 @@ int define(FILE * inputFile, FILE * outputFile, const char * macroLine)
 
 		if(parse_info->isComment == FALSE)
 		{
-			//  Check for macro expansion variable
-			if (strcmp(parse_info->opcode, "SET"))
-			{
-				//Check if macro varialbe is in valid format
-				if(parse_info->label != NULL &&
-					*(parse_info->label) == '&' && 
-					!isspace(*((parse_info->label) + 1)) )
-				{
-					//Add to argTab
-                    argtab_add(argtab, parse_info->label, parse_info->operators);
-				}
-			}
-
+			
 			// Substitute positional notation for parameters
 			tmpString = _strdup(currentLine);
 			index = deftab_add(deftab, tmpString);
