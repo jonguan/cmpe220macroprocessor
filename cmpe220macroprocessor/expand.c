@@ -22,7 +22,7 @@
 #include "parser.h"
 
 // local function definitions
-int setUpArguments (const char * macroDef, const char *line, const char *macroName, int maxArgs);
+int setUpArguments (const char * macroDef, const char *line, const char *macroName);
 int commentOutMacroCall(char *inputLine, FILE *outputfd);
 int getNumParameters(char *line, const char *macroName);
 int evaluateOperands(char *operands);
@@ -119,10 +119,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	*/
 	// Get macro definition line
 	line = getline(inputFileDes);
-	argCount = getNumParameters(line, macroName);
+	//argCount = getNumParameters(line, macroName);
 
 	/* Create ARGTAB with arguments from macro invocation */
-	if (setUpArguments(macroInvocation, line, macroName, argCount) == FAILURE) {
+	if (setUpArguments(macroInvocation, line, macroName) == FAILURE) {
         free(macroInvocation);
 		return FAILURE;
 	}
@@ -298,10 +298,11 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
  *  - 0, if inputLine is a comment or if no arguments found in macro invocation OR
  *  - -1, for all FAILURE cases
  */
-int setUpArguments (const char *currLine, const char *macroDef, const char *macroName, int maxArgs)
+int setUpArguments (const char *currLine, const char *macroDef, const char *macroName)
 {
 	int argCount = 0;
-	char *operand = NULL, *defOperand = NULL;
+	char *operand, *defOperand = NULL;
+	char *startPtr, *endPtr = NULL;
 	parse_info_t *splitInvLine = NULL;
     parse_info_t *splitDefLine = NULL;
 	char *nextInvToken = NULL;
@@ -381,14 +382,36 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 	     * Format of arguments in operands field: &op1,&op2,&op3,...
 	     * ARGTAB indexing starts at 1.
 	     */
-	    operand = strtok_s(splitInvLine->operators, ", ", &nextInvToken);
+		// Declare memory for operand
+		operand = (char *)malloc(SHORT_STRING_SIZE);
+		memset(operand, '\0', SHORT_STRING_SIZE);
+
+		startPtr = splitInvLine->operators;
+		endPtr = strpbrk(splitInvLine->operators, ",");
+		strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+	    //operand = strtok_s(splitInvLine->operators, ", ", &nextInvToken);
         defOperand = strtok_s(splitDefLine->operators, ", ", &nextDefToken);
-        while(operand != NULL && defOperand != NULL)
+        
+		// Operand can be null
+		while(defOperand != NULL)
         {
             argtab_add(argtab, defOperand, operand);
-            operand = strtok_s(NULL, ", ", &nextInvToken);
+
+			//clear out previous operand
+			memset(operand, '\0', SHORT_STRING_SIZE);
+
+			if(endPtr != NULL)
+			{
+				startPtr = endPtr + 1;
+				endPtr = strpbrk(startPtr, ",");
+				strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+			}
+			
+           // operand = strtok_s(NULL, ", ", &nextInvToken);
             defOperand = strtok_s(NULL, ", ", &nextDefToken);
         }
+
+		free(operand);
     }
 	
     parse_info_free(splitInvLine);
