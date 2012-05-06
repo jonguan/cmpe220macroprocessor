@@ -70,7 +70,14 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	parse_info_t *parsedLine = parse_info_alloc();
 	int i = 0;
 
+	/* 
+		Initialize variables
+	*/
 	EXPANDING = TRUE;
+	memset(nestedIFArray, '\0', MAX_NESTED_IF_SIZE);
+	memset(nestedWhileArray, '\0', MAX_NESTED_WHILE_SIZE);
+	nestedIFArray[0] = TRUE;
+	nestedWhileArray[0] = TRUE;
 
 	if(VERBOSE) {
 		printf("EXPAND: Expanding Macro: %s ...\n", macroName);
@@ -121,9 +128,6 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	}
     free(macroInvocation);
 	
-	// Set up nested if array
-	
-	memset(nestedIFArray, '\0', MAX_NESTED_IF_SIZE);
 
 	// Increment deftabIndex to point to first line of definition
 	deftabIndex++;
@@ -164,9 +168,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			5. if an ELSE is hit, and allowed to evaluate the entire section, evaluate what follows until endif.
 			6. if else is hit and not allowed to evaluate the entire section, skip the section.
 		*/
-		if(strcmp(parsedLine->opcode, "IF") == SUCCESS || strcmp(parsedLine->opcode, "WHILE") == SUCCESS)
+		if(strncmp(parsedLine->opcode, "IF", strlen("IF")) == SUCCESS || 
+			strncmp(parsedLine->opcode, "WHILE", strlen("WHILE")) == SUCCESS)
 		{
-			isWhileExpression = (strcmp(parsedLine->opcode, "WHILE") == SUCCESS);
+			isWhileExpression = (strncmp(parsedLine->opcode, "WHILE", strlen("WHILE")) == SUCCESS);
 
 			// Increment global variable
 			if(isWhileExpression)
@@ -200,9 +205,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			continue;
 
 		}
-		else if(strcmp(parsedLine->opcode, "ENDIF") == SUCCESS || strcmp(parsedLine->opcode, "ENDW") == SUCCESS)
+		else if(strncmp(parsedLine->opcode, "ENDIF", strlen("ENDIF")) == SUCCESS || 
+			strncmp(parsedLine->opcode, "ENDW", strlen("ENDW")) == SUCCESS)
 		{
-			isWhileExpression = (strcmp(parsedLine->opcode, "ENDW") == SUCCESS);
+			isWhileExpression = strncmp(parsedLine->opcode, "ENDW", strlen("ENDW")) == SUCCESS;
 
 			// Decrement global variable
 			
@@ -243,10 +249,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			continue;
 			
 		}
-		else if(strcmp(parsedLine->opcode, "ELSE") == SUCCESS && IFSTATEMENTLEVEL > 0)
+		else if(strncmp(parsedLine->opcode, "ELSE", strlen("ELSE")) == SUCCESS && IFSTATEMENTLEVEL > 0)
 		{
 			//Process the next line until endif only if IF evaluation was false
-			shouldEvaluateSection = ! nestedIFArray[IFSTATEMENTLEVEL];
+			shouldEvaluateSection = (shouldEvaluateSection == FALSE) ? TRUE : shouldEvaluateSection; 
 
 			//Replace the value inside the nestedIFArray with the new value in case a new if/endif disrupts parsing
 			nestedIFArray[IFSTATEMENTLEVEL] = shouldEvaluateSection;
@@ -258,6 +264,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 
 		if(shouldEvaluateSection == TRUE)
 		{
+			if(VERBOSE)
+			{
+				printf("opcode is %s\n", parsedLine->opcode);
+			}
 			processLine(inputFileDes, outputFileDes, line);
 		}
 	
