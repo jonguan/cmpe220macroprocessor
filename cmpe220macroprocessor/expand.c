@@ -464,14 +464,69 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
  * Returns result of evaluation of conditional macro expansion IF
  *
  * Parameters:
- *  - operands - string containing ( comparision )
+ *  - operands - string containing ( comparison )
  *  
  * Returns:
  *  - TRUE, true
  *  - FALSE, if false
- *  - FAILURE, for invalid syntaxe
+ *  - FAILURE, for invalid syntax
  */
 int evaluateOperands(char *operands)
 {
+	char * leftoperand = NULL;
+	char * middleoperand = NULL;
+	char * rightoperand = NULL;
+	char *ptr = operands;
+    char val[30];
+    int n, count = 0;
+
+	// parse the conditional statement
+	while(sscanf(ptr, "%31[^ ]%n", val, &n) == 1)
+    {
+		// this assumes that there are only 3 operands; I'm going to leave this for now, but may change it if necessary
+		if(count == 0) leftoperand = _strdup(val);
+		if(count == 1) middleoperand = _strdup(val);
+		if(count == 2) rightoperand = _strdup(val);
+		count++;
+        ptr += n;
+        if ( *ptr != ' ' ) break;
+        ++ptr;
+    }
+
+	memmove(leftoperand, leftoperand+1, strlen(leftoperand)); // remove the left parentheses from the leftoperand
+	rightoperand[strlen(rightoperand)-1] = 0; // remove the right parentheses from the rightoperand
+
+	leftoperand = argtab_get(argtab, leftoperand); //  get the value of leftoperand from argtab
+	
+	// this series of if/else statements will evaluate the conditional statement and return TRUE or FALSE
+	if(strcmp(middleoperand,"EQ") == 0)
+	{
+		if(strcmp(leftoperand, rightoperand) == 0)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	else if(strcmp(middleoperand,"NE") == 0)
+	{
+		if(strcmp(leftoperand, rightoperand) != 0)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	else if(strcmp(middleoperand,"GT") == 0)
+	{
+		if(strcmp(leftoperand, rightoperand) > 0)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	else if(strcmp(middleoperand,"LT") == 0)
+	{
+		if(strcmp(leftoperand, rightoperand) < 0)
+			return TRUE;
+		else
+			return FALSE;
+	}
+
 	return FAILURE;
 }
