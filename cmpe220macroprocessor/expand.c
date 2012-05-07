@@ -405,7 +405,10 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 			{
 				startPtr = endPtr + 1;
 				endPtr = strpbrk(startPtr, ",");
-				strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+                if(endPtr != NULL)
+                {
+				    strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+                }
 			}
 			
            // operand = strtok_s(NULL, ", ", &nextInvToken);
