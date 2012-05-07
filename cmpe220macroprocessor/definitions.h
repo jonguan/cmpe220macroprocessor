@@ -42,6 +42,7 @@ void splitKeyValuePair(const char * string, char * key, size_t keysize, char * v
 int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[]);
 void printOutputLine(FILE * outputFile, const char * line);
 void getUniquePrefix(int id, char * prefix, size_t bufferSize);
+char* evaluateExpressionOperands(char *operands);
 
 // Declare global variables
 ///////////////////////////////////////////////////////////////////////////////////////////////

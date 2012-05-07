@@ -24,8 +24,8 @@
 // local function definitions
 int setUpArguments (const char * macroDef, const char *line, const char *macroName);
 int commentOutMacroCall(char *inputLine, FILE *outputfd);
-int getNumParameters(char *line, const char *macroName);
-int evaluateOperands(char *operands);
+int getNumArguments(char *line);
+int evaluateIFOperands(char *operands);
 char *currentLabel = NULL;
 
 /*
@@ -62,7 +62,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	char *labelledLine;
     char *macroInvocation;
 	const char opDelim[] = "& ";
-	int argCount;
+	//int argCount;
 	int endOfMacroDef;
 	int bufferLen;
 	int sizeOfTAB; 
@@ -181,7 +181,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			
 			// Evaluate operands only if allowed to evaluate entire section
 			if(shouldEvaluateSection)
-				ifExpressionResult = evaluateOperands(parsedLine->operators);
+				ifExpressionResult = evaluateIFOperands(parsedLine->operators);
 			else
 				ifExpressionResult = SKIP;
 
@@ -252,8 +252,9 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		else if(strncmp(parsedLine->opcode, "ELSE", strlen("ELSE")) == SUCCESS && IFSTATEMENTLEVEL > 0)
 		{
 			//Process the next line until endif only if IF evaluation was false
-			shouldEvaluateSection = (shouldEvaluateSection == FALSE) ? TRUE : shouldEvaluateSection; 
-
+			// Likewise, if the IF was true, then evaluate is FALSE
+			shouldEvaluateSection = (shouldEvaluateSection > -1) ? !shouldEvaluateSection : shouldEvaluateSection; 
+			
 			//Replace the value inside the nestedIFArray with the new value in case a new if/endif disrupts parsing
 			nestedIFArray[IFSTATEMENTLEVEL] = shouldEvaluateSection;
 
@@ -419,53 +420,88 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 	return argCount;
 }
 
+
 /*
- * getNumParameters:
- * Returns number of parameters from macro definition.
+ * evaluateExpressionOperands:
+ * Returns number of arguments in the line passed in .
+ *
+ * Parameters:
+ *  - inputLine - input string to be evaluated
+ *  
+ * Returns:
+ *  - Evaluation of expression in string format
+ *  - count, if operands starts with %NITEMS
+ *  - expression result, if operands are some sort of mathematical function
+ *  - NULL if error in evaluation
+ */
+char* evaluateExpressionOperands(char *operands)
+{
+	int result = 0;
+	char delimiters[] = "(), ";
+	char *returnValue;
+
+	//char *lineCopy = NULL;
+	returnValue = (char *)malloc(SHORT_STRING_SIZE);
+	/*
+	Check to see if arguments are of form %NITEMS
+	Assumes that %NITEMS will start at index 0
+	*/
+	result = strncmp(operands, "%NITEMS", strlen("%NITEMS"));
+	if(result == SUCCESS)
+	{
+		//Base 10 conversion
+		_itoa_s(getNumArguments(operands + strlen("%NITEMS")), returnValue, SHORT_STRING_SIZE, 10 );
+		return returnValue;
+	}
+
+	result = getNumArguments(operands);
+	if(result == 0)
+	{
+		return NULL;
+	}
+	else if (result == 1)
+	{
+		return operands;
+	}else
+	{
+		// TODO: evaluate the mathematical expression
+	}
+
+	return NULL;
+}
+
+
+
+/*
+ * getNumArguments:
+ * Returns number of arguments in the line passed in .
  *
  * Parameters:
  *  - inputLine - input macro definition line
- *  - macroName - Name of MACRO being expanded
+ *  
  * Returns:
  *  - >0, Argument count OR
- *  - 0, if inputLine is a comment or if no arguments found in macro invocation OR
+ *  - 0, if inputLine is a comment or if no arguments found in inputLine OR
  *  - -1, for all FAILURE cases
  */
-int getNumParameters(char *line, const char *macroName)
+int getNumArguments(char *line)
 {
 	int argCount = 0;
 	char *operand;
-	parse_info_t *defLine = NULL;
 	char *nextToken = NULL;
-	const char argDelim[] = ", ";
+	const char argDelim[] = "(), ";
 	
-    defLine = parse_info_alloc(); // create empty parse_info_t
-
-	/* 
-	 * If ARGTAB creation succeeded, proceed to parse the input line
-	 * into tokens - label, opcode, operands string.
-	 */
-	if ((defLine == NULL) || (parse_line(defLine, line) < 0) || 
-		strncmp(defLine->label, macroName, strlen(defLine->opcode)) != SUCCESS ) {
-        parse_info_free(defLine);
-		return FAILURE;
-	}
-	
-
 	/*
 	 * Count number of arguments from macro invocation.
 	 * Format of arguments in operands field: &op1,&op2,&op3,...
 	 * Parameters must have & in front, with no space after.
 	 */
-	operand = strtok_s(defLine->operators, argDelim, &nextToken);
+	operand = strtok_s(line, argDelim, &nextToken);
 	while (operand != NULL){
-		// Parameter must start with & and have non-whitespace follow
-		if(*operand == '&' && !isspace(*(operand+1)))
-			argCount++;	
+		argCount++;	
 		operand = strtok_s(NULL, argDelim, &nextToken);
 	}
 	
-	parse_info_free(defLine);
 	return argCount;
 }
 
@@ -513,7 +549,7 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
 
 
 /*
- * evaluateOperands:
+ * evaluateIFOperands:
  * Returns result of evaluation of conditional macro expansion IF
  *
  * Parameters:
@@ -524,14 +560,16 @@ int commentOutMacroCall(char *inputLine, FILE *outputfd)
  *  - FALSE, if false
  *  - FAILURE, for invalid syntax
  */
-int evaluateOperands(char *operands)
+int evaluateIFOperands(char *operands)
 {
 	char * leftoperand = NULL;
 	char * middleoperand = NULL;
 	char * rightoperand = NULL;
 	char *ptr = operands;
     char val[30];
-    int n, count = 0;
+    int n, count = 0, result = 0;
+
+
 
 	// parse the conditional statement
 	while(sscanf(ptr, "%31[^ ]%n", val, &n) == 1)
@@ -547,8 +585,13 @@ int evaluateOperands(char *operands)
         ++ptr;
     }
 
+
 	memmove(leftoperand, leftoperand+1, strlen(leftoperand)); // remove the left parentheses from the leftoperand
 	rightoperand[strlen(rightoperand)-1] = 0; // remove the right parentheses from the rightoperand
+
+	// Special case for null characters
+	if(strncmp(rightoperand, "''", strlen("''")) == SUCCESS)
+		memset(rightoperand, '\0', strlen(rightoperand));
 
 	//leftoperand = argtab_get(argtab, leftoperand); //  get the value of leftoperand from argtab
 	

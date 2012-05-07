@@ -291,7 +291,7 @@ int parseInputCommand(char **inputFileName, char **outputFileName, int argc, cha
 char* getline(FILE * inputFile)
 {
 	char * line = NULL;
-	char * argtab_val = NULL;
+	char * argtab_val = NULL; 
 
 	// Error check
 	if (inputFile == NULL) {
@@ -300,12 +300,15 @@ char* getline(FILE * inputFile)
 	}
 
 	if(EXPANDING)
-	{
+	{	
 		// get next line of macro definition from DEFTAB
 		line = deftab_get(deftab, deftabIndex);
 		strcpy_s(currentLine, sizeof(currentLine), line);
+
 		// substitute arguments from ARGTAB with values  
-        argtab_substituteValues(argtab, currentLine, sizeof(currentLine));
+		argtab_substituteValues(argtab, currentLine, sizeof(currentLine));
+
+		
 	}
 	else
 	{

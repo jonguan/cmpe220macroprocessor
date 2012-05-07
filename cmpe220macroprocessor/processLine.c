@@ -77,7 +77,7 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		if(parseInfo->label != NULL)
 		{
 			//label contains the variable
-			argtab_addOrSet(argtab, parseInfo->label, parseInfo->operators);
+			argtab_addOrSet(argtab, parseInfo->label, evaluateExpressionOperands(parseInfo->operators));
 
 		}
 	}
