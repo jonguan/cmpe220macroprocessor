@@ -77,7 +77,10 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		if(parseInfo->label != NULL)
 		{
 			//label contains the variable
-			argtab_addOrSet(argtab, parseInfo->label, evaluateExpressionOperands(parseInfo->operators));
+			result = evaluateExpressionOperands(parseInfo->operators);
+			// Base 10 conversion
+			itoa(result, currentLine, 10);
+			result = argtab_addOrSet(argtab, parseInfo->label, currentLine);
 
 		}
 	}

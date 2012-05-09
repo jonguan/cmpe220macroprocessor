@@ -1,0 +1,18 @@
+.FIRST    RDBUFF    F3,BUFFER,LENGTH,(00,03,04)
+FIRST           CLEAR           X          CLEAR LOOP COUNTER
+                CLEAR           A
+                +LDT            #4096       SET MAX LENGTH = 4096          
+$AALOOP           TD              =X'F3'  TEST INPUT DEVICE
+                JEQ             $AALOOP	LOOP UNTIL READY
+                RD              =X'F3'  READ CHARACTER INTO REG A
+                COMP            =X'000000,03,04[1]'
+                JEQ             $AAEXIT
+                COMP            =X'000000,03,04[2]'
+                JEQ             $AAEXIT
+                COMP            =X'000000,03,04[3]'
+                JEQ             $AAEXIT
+                STCH            BUFFER,X	STORE CHARACTER IN BUFFER
+                TIXR            T		LOOP UNLESS MAXIMUM LENGTH
+                JLT             $AALOOP	  HAS BEEN REACHED
+$AAEXIT           STX             LENGTH	SAVE RECORD LENGTH
+		END FIRST

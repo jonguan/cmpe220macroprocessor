@@ -462,7 +462,7 @@ void printOutputLine(FILE * outputFile, const char * line)
             memset(uniquePrefix, 0, sizeof(uniquePrefix));
             getUniquePrefix(UNIQUE_ID, uniquePrefix, sizeof(uniquePrefix));
             strReplace(tmpLine, sizeof(tmpLine), "$", uniquePrefix);
-            fprintf(outputFile, tmpLine);
+            fprintf(outputFile, "%s\n", tmpLine);
         }
         parse_info_free(parseInfo);
     }

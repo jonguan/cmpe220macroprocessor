@@ -253,24 +253,24 @@ void parse_info_print(parse_info_t * parse_info)
  *  - Pretty prints the parse_info_t struct into a string
  * Parameters:
  *  - a parse_info_t structure.
- * Returns:
  *  - a string with label, opcode, operators in STRING_
+ * Returns:
+ *  SUCCESS - if success
+ *  FAILURE - if not
  */
-char * parse_reconstruct_string(parse_info_t * parse_info)
+int parse_reconstruct_string(parse_info_t * parse_info, char *returnString)
 {
-	char *returnString = NULL;
+	int retVal = SUCCESS;
 	char *stringPtr = NULL;
 	int remainingSpaces = 0;
 
-	returnString = (char *)malloc(CURRENT_LINE_SIZE);
-	memset(returnString, '\0', CURRENT_LINE_SIZE);
-
-	// Fill with blank spaces and NULL terminate the end
-	sprintf(returnString, "%*c", CURRENT_LINE_SIZE, ' ');
+	memset(returnString, '\0', sizeof(returnString));
 
 	if(parse_info->label)
     {
-		strncpy_s(returnString, SHORT_STRING_SIZE, parse_info->label, strlen(parse_info->label));
+		if(VERBOSE)
+			printf("label is %s\n", parse_info->label);
+		retVal = strncpy_s(returnString, SHORT_STRING_SIZE, parse_info->label, strlen(parse_info->label));
     }
 
 	//Get rid of null terminator
@@ -283,7 +283,7 @@ char * parse_reconstruct_string(parse_info_t * parse_info)
 
     if(parse_info->opcode)
     {
-        strncpy_s(stringPtr, SHORT_STRING_SIZE, parse_info->opcode, strlen(parse_info->opcode));
+        retVal = strncpy_s(stringPtr, SHORT_STRING_SIZE, parse_info->opcode, strlen(parse_info->opcode));
     }
 
 	//Get rid of null terminator
@@ -296,10 +296,10 @@ char * parse_reconstruct_string(parse_info_t * parse_info)
 
     if(parse_info->operators)
     {
-		if (VERBOSE)
-			printf("operators are %s", parse_info->operators);
-		strcpy_s(stringPtr, (CURRENT_LINE_SIZE - 2*SHORT_STRING_SIZE), parse_info->operators);
+		/*if (VERBOSE)
+			printf("operators are %s\n", parse_info->operators);*/
+		retVal = strcpy_s(stringPtr, (CURRENT_LINE_SIZE - 2*SHORT_STRING_SIZE), parse_info->operators);
     }
 
-	return returnString;
+	return retVal;
 }

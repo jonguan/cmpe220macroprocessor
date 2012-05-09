@@ -21,5 +21,5 @@ void            parse_info_free(parse_info_t * parse_info);
 void            parse_info_clear(parse_info_t * parse_info);
 void            parse_info_print(parse_info_t * parse_info);
 int             parse_line(parse_info_t * parse_info, const char * line);
-char *		    parse_reconstruct_string(parse_info_t * parse_info);
+int				parse_reconstruct_string(parse_info_t * parse_info, char *returnString);
 #endif // PARSER_H_

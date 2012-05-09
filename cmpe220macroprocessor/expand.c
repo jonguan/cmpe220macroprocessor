@@ -159,10 +159,24 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		}
 
 	
-		// Substitute arguments for operators here
-		argtab_substituteValues(argtab, parsedLine->operators, (CURRENT_LINE_SIZE - 2*SHORT_STRING_SIZE));
+		/* 
+			Substitute arguments for operators here
+		*/
+		if(parsedLine->operators != NULL)
+		{
+			// Copy parsedLine->operators to currentLine buffer
+			strncpy_s(currentLine, CURRENT_LINE_SIZE, parsedLine->operators, strlen(parsedLine->operators));
+
+			argtab_substituteValues(argtab, currentLine, sizeof(currentLine));
+
+			// Move currentLine back to parsedLine->operators
+			free(parsedLine->operators);
+			parsedLine->operators = _strdup(currentLine);
+
+			
+		}
 		// Write back into currentLine
-		strcpy_s(currentLine, CURRENT_LINE_SIZE, parse_reconstruct_string(parsedLine)); 
+		parse_reconstruct_string(parsedLine, currentLine); 
 
 		/* 
 			Check for conditional expansion keywords - IF, ELSE, ENDIF, WHILE, ENDW
@@ -219,8 +233,8 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			isWhileExpression = strncmp(parsedLine->opcode, "ENDW", strlen("ENDW")) == SUCCESS;
 
 			// Decrement global variable
-			
-			IFSTATEMENTLEVEL--;
+			if (!isWhileExpression)
+				IFSTATEMENTLEVEL--;
 			
 			//Check if global variable is less than 0
 			if(IFSTATEMENTLEVEL < 0 || WHILESTATEMENTLEVEL < 0)
@@ -245,6 +259,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 				else{
 					//While statements need to loop back if still true
 					deftabIndex = nestedWhileArray[WHILESTATEMENTLEVEL];
+					continue;
 				}
 				
 			}
@@ -275,9 +290,9 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		{
 			if(VERBOSE)
 			{
-				printf("opcode is %s\n", parsedLine->opcode);
+				printf("currentLine is %s\n", currentLine);
 			}
-			processLine(inputFileDes, outputFileDes, line);
+			processLine(inputFileDes, outputFileDes, currentLine);
 		}
 	
 		deftabIndex++;
@@ -452,6 +467,7 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
  *
  * Parameters:
  *  - inputLine - input string to be evaluated
+ *  - outputBuffer
  *  
  * Returns:
  *  - Evaluation of expression in string format
@@ -459,17 +475,16 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
  *  - expression result, if operands are some sort of mathematical function
  *  - NULL if error in evaluation
  */
-char* evaluateExpressionOperands(char *operands)
+int evaluateExpressionOperands(char *operands)
 {
 	int result = 0;
 	char delimiters[] = "(), ";
-	char *returnValue;
 	char *lineCopy = NULL;
-	char *val = NULL;
-	char *operatorVal = NULL;
+	char val[30];
+	char operatorVal[2];
 	int n, count = 0;
-	
-	returnValue = (char *)malloc(SHORT_STRING_SIZE);
+	char *start, *end;
+
 	/*
 	Check to see if arguments are of form %NITEMS
 	Assumes that %NITEMS will start at index 0
@@ -477,65 +492,71 @@ char* evaluateExpressionOperands(char *operands)
 	result = strncmp(operands, "%NITEMS", strlen("%NITEMS"));
 	if(result == SUCCESS)
 	{
-		//Base 10 conversion
-		_itoa_s(getNumArguments(operands + strlen("%NITEMS")), returnValue, SHORT_STRING_SIZE, 10 );
-		return returnValue;
+		result = getNumArguments(operands + strlen("%NITEMS"));
+		return result;
 	}
 
 	result = getNumArguments(operands);
 	if(result == 0)
 	{
-		return NULL;
+		return 0;
 	}
-	else if (result == 1)
-	{
-		return operands;
-	}else
+	//else if (result == 1 && strlen(operands) == 1)
+	//	return atoi(operands);
+	else
 	{
 		// TODO: evaluate the mathematical expression
-		lineCopy = _strdup(operands);
 		// parse the conditional statement to remove spaces and math operators
-		if(sscanf(lineCopy, "%31[^ +-*/%]%n", val, &n) == 1)
+		start = operands;
+		end = strpbrk(operands, "+-*/%() ");
+
+		if(end == NULL)
+			return atoi(start);
+
+		strncpy_s(val, 30, start, (end-start));
+
+		//Val now contains left operand
+		start = end;
+
+		//start should now either point to space or math operator
+		n = strcspn(start, "+-*/%()");
+		start += n;
+		end = start+1;
+		//get the math operator
+			
+		strncpy_s(operatorVal, 2, start, 1);
+
+		start = end;
+
+		// skip spaces
+		while( *start == ' ' ) 
+			start++;
+
+		result = evaluateExpressionOperands(start);
+
+		switch(operatorVal[0])
 		{
-			// Val now contains the left operand
-			lineCopy += n;
-
-			//lineCopy should now either point to space or math operator
-			// skip spaces
-			while( *lineCopy == ' ' ) 
-				lineCopy++;
-
-			//lineCopy must now be a math operator
-			if(sscanf(lineCopy, "%2[+-*/%]%n", operatorVal, &n) == 1)
-				lineCopy += n;
-			else
-				return NULL;
-
-			// skip spaces
-			while( *lineCopy == ' ' ) 
-				lineCopy++;
-
-			switch(*operatorVal)
-			{
-			case '+':
-				return itoa(atoi(val) + atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
-			case '-':
-				return itoa(atoi(val) - atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
-			case '*':
-				return itoa(atoi(val) * atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
-			case '/':
-				return itoa(atoi(val) / atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
-			case '%':
-				return itoa(atoi(val) % atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
-			default:
-				return NULL;
-			}
+		case '+':
+			return atoi(val) + result;
+		case '-':
+			return atoi(val) - result;
+		case '*':
+			return atoi(val) * result;
+		case '/':
+			return atoi(val) / result;
+		case '%':
+			return atoi(val) % result;
+		default:
+			return atoi(val);
 		}
-
-
 	}
+	/*else
+			return atoi(operands);*/
 
-	return NULL;
+
+	
+
+	return 0;
 }
 
 
@@ -691,7 +712,10 @@ int evaluateIFOperands(char *operands)
 			return TRUE;
 		else
 			return FALSE;
-	}
+	}else if(strcmp(middleoperand, "LE") == 0)
+		return (strcmp(leftoperand, rightoperand) <= 0);
+	else if(strcmp(middleoperand, "GE") == 0)
+		return (strcmp(leftoperand, rightoperand) >= 0);
 
 	return FAILURE;
 }
