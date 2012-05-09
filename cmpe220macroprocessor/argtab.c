@@ -9,6 +9,9 @@
 #include "argtab.h"
 #include "uthash\uthash.h"
 
+// Private functions
+int			nameLengthSort(struct argtab_data *a, struct argtab_data *b);
+
 /**
  * Function: argtab_alloc
  * Description:
@@ -225,10 +228,32 @@ void argtab_substituteValues(argtab_t * table, char * buffer, size_t bufsize)
         ht = &(table->data);
         if(ht)
         {
+			//sort by length of the key descending order
+			HASH_SORT(*ht, nameLengthSort);
+
             HASH_ITER(hh, *ht, i, tmp)
             {
                 strReplace(buffer, bufsize, i->key, i->value);
             }
         }
     }
+}
+
+
+/**
+ * Function: nameLengthSort
+ * Description:
+ *  - A comparision function for HASH_SORT
+ *    The second argument is a pointer to a comparison function. 
+ *
+ * Parameters:
+ *  - pointers to 2 nodes to compare
+ * Returns:
+ *  - < 0 ; b < a
+ *  - 0; a == b
+ *  - > 0; b > a
+ */
+int nameLengthSort(struct argtab_data *a, struct argtab_data *b)
+{
+	return strlen(b->key) - strlen(a->key);
 }

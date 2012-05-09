@@ -72,7 +72,7 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		//Call define
 		result = define(inputFile, outputFile, macroLine);
 	}
-	else if(parseInfo->opcode != NULL && strcmp(parseInfo->opcode, "SET") == SUCCESS)
+	else if(parseInfo->opcode != NULL && strncmp(parseInfo->opcode, "SET", strlen("SET")) == SUCCESS)
 	{
 		if(parseInfo->label != NULL)
 		{

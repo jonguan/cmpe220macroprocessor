@@ -32,4 +32,5 @@ int         argtab_addOrSet(argtab_t * table, const char * symbol, const char * 
 void        argtab_clear(argtab_t * table);
 void        argtab_substituteValues(argtab_t * table, char * buffer, size_t bufsize);
 
+
 #endif /* ARGTAB_H_ */

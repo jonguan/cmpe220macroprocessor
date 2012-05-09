@@ -29,6 +29,11 @@
 #define MAX_NESTED_IF_SIZE  (20)
 #define MAX_NESTED_WHILE_SIZE (8)
 
+// Pretty Print Sizes
+#define kOpCodeStart		SHORT_STRING_SIZE
+#define kOperandStart		(kOpCodeStart + SHORT_STRING_SIZE)
+#define kOpFlagSymStart		(kOperandStart - 1)
+
 // Function Definitions
 ////////////////////////////////////////////////////////////////////////////////////////
 char* getline(FILE *inputFile);
@@ -77,9 +82,7 @@ extern argtab_t * argtab;
 
 
 
-// Input file parameter description]
-#define kOpCodeStart 10
-#define kOpFlagSymStart 18
-#define kOperandStart 19
+
+
 
 #endif // DEFINITIONS_H_

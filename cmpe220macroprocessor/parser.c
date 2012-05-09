@@ -176,6 +176,7 @@ int parse_line(parse_info_t * parse_info, const char * line)
             token++;
         }
         parse_info->operators = _strdup(token);
+		
     }
 
     // at this point we've done the parsing, check to see if keyword macro parameters are used
@@ -244,4 +245,61 @@ void parse_info_print(parse_info_t * parse_info)
             printf("null\n");
         }
     }
+}
+
+/**
+ * Function: parse_reconstruct_string
+ * Description:
+ *  - Pretty prints the parse_info_t struct into a string
+ * Parameters:
+ *  - a parse_info_t structure.
+ * Returns:
+ *  - a string with label, opcode, operators in STRING_
+ */
+char * parse_reconstruct_string(parse_info_t * parse_info)
+{
+	char *returnString = NULL;
+	char *stringPtr = NULL;
+	int remainingSpaces = 0;
+
+	returnString = (char *)malloc(CURRENT_LINE_SIZE);
+	memset(returnString, '\0', CURRENT_LINE_SIZE);
+
+	// Fill with blank spaces and NULL terminate the end
+	sprintf(returnString, "%*c", CURRENT_LINE_SIZE, ' ');
+
+	if(parse_info->label)
+    {
+		strncpy_s(returnString, SHORT_STRING_SIZE, parse_info->label, strlen(parse_info->label));
+    }
+
+	//Get rid of null terminator
+	stringPtr = returnString + strlen(returnString);
+	while(stringPtr < returnString + SHORT_STRING_SIZE)
+		*stringPtr++ = ' ';
+
+	//Move on
+	//stringPtr = returnString + SHORT_STRING_SIZE;
+
+    if(parse_info->opcode)
+    {
+        strncpy_s(stringPtr, SHORT_STRING_SIZE, parse_info->opcode, strlen(parse_info->opcode));
+    }
+
+	//Get rid of null terminator
+	stringPtr = returnString + strlen(returnString);
+	while (stringPtr < returnString + 2*SHORT_STRING_SIZE)
+		*stringPtr++ = ' ';
+
+	// Move on
+	
+
+    if(parse_info->operators)
+    {
+		if (VERBOSE)
+			printf("operators are %s", parse_info->operators);
+		strcpy_s(stringPtr, (CURRENT_LINE_SIZE - 2*SHORT_STRING_SIZE), parse_info->operators);
+    }
+
+	return returnString;
 }

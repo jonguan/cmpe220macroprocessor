@@ -305,8 +305,9 @@ char* getline(FILE * inputFile)
 		line = deftab_get(deftab, deftabIndex);
 		strcpy_s(currentLine, sizeof(currentLine), line);
 
-		// substitute arguments from ARGTAB with values  
-		argtab_substituteValues(argtab, currentLine, sizeof(currentLine));
+		// substitute arguments from ARGTAB with values 
+		// MOVED TO EXPAND FUNCTION SO THAT WE PASS IN OPERATORS ONLY!
+		//argtab_substituteValues(argtab, currentLine, sizeof(currentLine));
 
 		
 	}

@@ -119,7 +119,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	*/
 	// Get macro definition line
 	line = getline(inputFileDes);
-	//argCount = getNumParameters(line, macroName);
+	
 
 	/* Create ARGTAB with arguments from macro invocation */
 	if (setUpArguments(macroInvocation, line, macroName) == FAILURE) {
@@ -135,8 +135,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	while (deftabIndex < endOfMacroDef) {	// Assumes the MACRO definition ends with MEND in DEFTAB!
 		line = getline(inputFileDes);
 
-		/* If macro invocation came with a label, copy the label down to next line */
-		if (currentLabel != NULL) {
+		/* If macro invocation came with a label, copy the label down to next available line
+			where there is not a conditional macro variable
+		*/
+		if (currentLabel != NULL && *line != '&') {
 			bufferLen = strlen(currentLabel) + strlen(line) + (2 * sizeof(char));
 			labelledLine = (char *) malloc(bufferLen);
 			memset(labelledLine, '\0', bufferLen);
@@ -155,6 +157,12 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		{
 			return FAILURE;
 		}
+
+	
+		// Substitute arguments for operators here
+		argtab_substituteValues(argtab, parsedLine->operators, (CURRENT_LINE_SIZE - 2*SHORT_STRING_SIZE));
+		// Write back into currentLine
+		strcpy_s(currentLine, CURRENT_LINE_SIZE, parse_reconstruct_string(parsedLine)); 
 
 		/* 
 			Check for conditional expansion keywords - IF, ELSE, ENDIF, WHILE, ENDW
@@ -291,7 +299,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
  * Set up ARGTAB with arguments from macro invocation.
  *
  * Parameters:
- *  - inputLine - input assembly program line to comment out
+ *  - currLine - macro invocation - does not yet have arguments substituted
  *  - macroName - Name of MACRO being expanded
  *  - maxArgs - number of Parameters for macro macroName
  * Returns:
@@ -301,7 +309,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
  */
 int setUpArguments (const char *currLine, const char *macroDef, const char *macroName)
 {
-	int argCount = 0;
+	int n, argCount = 0;
 	char *operand, *defOperand = NULL;
 	char *startPtr, *endPtr = NULL;
 	parse_info_t *splitInvLine = NULL;
@@ -405,15 +413,29 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 			{
 				startPtr = endPtr + 1;
 				endPtr = strpbrk(startPtr, ",");
+				
                 if(endPtr != NULL)
                 {
-				    strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+					if(*startPtr == '(')
+					{
+						// Expression (val1, val2, val3)
+						if(sscanf(startPtr, "(%s)", operand) == 1)
+						{
+							// Need help here: why is sscanf returning the last parens?!
+							endPtr = startPtr + strlen(operand) ;
+							startPtr++;
+						}
+
+					}
+					
+					strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+					
                 }
 			}
 			
            // operand = strtok_s(NULL, ", ", &nextInvToken);
             defOperand = strtok_s(NULL, ", ", &nextDefToken);
-        }
+		}
 
 		free(operand);
     }
@@ -442,8 +464,11 @@ char* evaluateExpressionOperands(char *operands)
 	int result = 0;
 	char delimiters[] = "(), ";
 	char *returnValue;
-
-	//char *lineCopy = NULL;
+	char *lineCopy = NULL;
+	char *val = NULL;
+	char *operatorVal = NULL;
+	int n, count = 0;
+	
 	returnValue = (char *)malloc(SHORT_STRING_SIZE);
 	/*
 	Check to see if arguments are of form %NITEMS
@@ -468,6 +493,46 @@ char* evaluateExpressionOperands(char *operands)
 	}else
 	{
 		// TODO: evaluate the mathematical expression
+		lineCopy = _strdup(operands);
+		// parse the conditional statement to remove spaces and math operators
+		if(sscanf(lineCopy, "%31[^ +-*/%]%n", val, &n) == 1)
+		{
+			// Val now contains the left operand
+			lineCopy += n;
+
+			//lineCopy should now either point to space or math operator
+			// skip spaces
+			while( *lineCopy == ' ' ) 
+				lineCopy++;
+
+			//lineCopy must now be a math operator
+			if(sscanf(lineCopy, "%2[+-*/%]%n", operatorVal, &n) == 1)
+				lineCopy += n;
+			else
+				return NULL;
+
+			// skip spaces
+			while( *lineCopy == ' ' ) 
+				lineCopy++;
+
+			switch(*operatorVal)
+			{
+			case '+':
+				return itoa(atoi(val) + atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
+			case '-':
+				return itoa(atoi(val) - atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
+			case '*':
+				return itoa(atoi(val) * atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
+			case '/':
+				return itoa(atoi(val) / atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
+			case '%':
+				return itoa(atoi(val) % atoi(evaluateExpressionOperands(lineCopy)), returnValue, 10);
+			default:
+				return NULL;
+			}
+		}
+
+
 	}
 
 	return NULL;

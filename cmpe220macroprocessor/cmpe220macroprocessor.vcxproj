@@ -76,6 +76,7 @@
   <ItemGroup>
     <None Include="Fig4-1.txt" />
     <None Include="Fig4-8.txt" />
+    <None Include="Fig4-9.txt" />
     <None Include="ReadMe.txt" />
     <None Include="Test1.txt" />
     <None Include="TestKeyword.txt" />
@@ -87,6 +88,7 @@
     <ClInclude Include="deftab.h" />
     <ClInclude Include="namtab.h" />
     <ClInclude Include="parser.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="uthash\utarray.h" />
@@ -104,6 +106,9 @@
     <ClCompile Include="parser.c" />
     <ClCompile Include="processLine.c" />
     <ClCompile Include="test.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="cmpe220macroprocessor.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
