@@ -264,6 +264,9 @@ int parse_reconstruct_string(parse_info_t * parse_info, char *returnString)
 	char *stringPtr = NULL;
 	int remainingSpaces = 0;
 
+	if(parse_info->isComment)
+		return retVal;
+
 	memset(returnString, '\0', sizeof(returnString));
 
 	if(parse_info->label)

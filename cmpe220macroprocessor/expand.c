@@ -430,7 +430,11 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 			if(endPtr != NULL)
 			{
 				startPtr = endPtr + 1;
-				endPtr = strpbrk(startPtr, ",");
+				//remove spaces
+				while (*startPtr == ' ')
+					startPtr++;
+
+				endPtr = strpbrk(startPtr, ", ");
 				
                 if(endPtr != NULL)
                 {

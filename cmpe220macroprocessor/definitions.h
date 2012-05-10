@@ -46,7 +46,7 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 int arrayValueForIndex(const char *stringArray, char *arrayVal, char *index);
 void splitKeyValuePair(const char * string, char * key, size_t keysize, char * value, size_t valuesize);
 int parseInputCommand(char **inputFileName, char **outputFileName, int argc, char * argv[]);
-void printOutputLine(FILE * outputFile, const char * line);
+int printOutputLine(FILE * outputFile, char * line);
 void getUniquePrefix(int id, char * prefix, size_t bufferSize);
 int evaluateExpressionOperands(char *operands);
 

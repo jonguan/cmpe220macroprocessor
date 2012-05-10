@@ -72,6 +72,7 @@ int argtab_add(argtab_t * table, const char * symbol, const char * value)
     struct argtab_data * element = NULL;
     struct argtab_data ** ht = NULL;
 	char *stringPtr = NULL;
+	char *endPtr = NULL;
 
     if(table != NULL && symbol != NULL && value != NULL)
     {
@@ -93,10 +94,14 @@ int argtab_add(argtab_t * table, const char * symbol, const char * value)
 
 			if(element->valIsArray)
 			{
-				sscanf(value, "(%s)", element->value);
-				stringPtr = element->value;
-				// Remove the last parens
-				stringPtr[strlen(stringPtr)-1] = '\0';
+				// Strip parens from array
+				stringPtr = _strdup(value);
+				endPtr = strpbrk(stringPtr, ")");
+				// replace ) with null
+				*endPtr = '\0';
+				
+				//set value to inside parens
+				strcpy_s(element->value, ARGTAB_STRING_SIZE, stringPtr+1);
 
 			}
 			else
@@ -129,6 +134,7 @@ int argtab_set(argtab_t * table, const char * symbol, const char * value)
     struct argtab_data * element = NULL;
     struct argtab_data ** ht = NULL;
 	char *stringPtr = NULL;
+	char *endPtr = NULL;
 
     if(table != NULL && symbol != NULL && value != NULL)
     {
@@ -141,10 +147,14 @@ int argtab_set(argtab_t * table, const char * symbol, const char * value)
 
 			if(element->valIsArray)
 			{
-				sscanf(value, "(%s)", element->value);
-				stringPtr = element->value;
-				// Remove the last parens
-				stringPtr[strlen(stringPtr)-1] = '\0';
+				// Strip parens from array
+				stringPtr = _strdup(value);
+				endPtr = strpbrk(stringPtr, ")");
+				// replace ) with null
+				*endPtr = '\0';
+				
+				//set value to inside parens
+				strcpy_s(element->value, ARGTAB_STRING_SIZE, stringPtr+1);
 			}
 			else
 			{

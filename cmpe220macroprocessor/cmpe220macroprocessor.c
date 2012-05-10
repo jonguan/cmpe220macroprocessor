@@ -475,10 +475,12 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 *  - outputFile - FILE pointer to output file.
 *  - line - Pointer to line of code that will be printed.
 * Returns:
-*  - none
+*  - SUCCESS if printed
+*  - FAILURE if line == NULL, or outputFile is null
 */
-void printOutputLine(FILE * outputFile, const char * line)
+int printOutputLine(FILE * outputFile, char * line)
 {
+	int result = FAILURE;
     parse_info_t * parseInfo = NULL;
     char tmpLine[CURRENT_LINE_SIZE];
     char uniquePrefix[UNIQUE_LABEL_DIGITS + 2];
@@ -494,6 +496,9 @@ void printOutputLine(FILE * outputFile, const char * line)
             parse_info_free(parseInfo);
             return;
         }
+
+		// Pretty print the line
+		parse_reconstruct_string(parseInfo, line); 
 
         // check if we need to include a label in an expanded line
         if(parseInfo->isComment == FALSE && EXPAND_LABEL == TRUE)
@@ -511,10 +516,15 @@ void printOutputLine(FILE * outputFile, const char * line)
             memset(uniquePrefix, 0, sizeof(uniquePrefix));
             getUniquePrefix(UNIQUE_ID, uniquePrefix, sizeof(uniquePrefix));
 			strReplace(tmpLine, sizeof(tmpLine), "$", uniquePrefix, FALSE);
-            fprintf(outputFile, "%s\n", tmpLine);
+			if(tmpLine[strlen(tmpLine)-1] == '\n')
+				fprintf(outputFile, "%s", tmpLine);
+			else
+				fprintf(outputFile, "%s\n", tmpLine);
         }
         parse_info_free(parseInfo);
+		return SUCCESS;
     }
+	return result;
 }
 
 /**

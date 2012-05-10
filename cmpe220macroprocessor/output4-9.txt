@@ -15,4 +15,4 @@ $AALOOP           TD              =X'F3'  TEST INPUT DEVICE
                 TIXR            T		LOOP UNLESS MAXIMUM LENGTH
                 JLT             $AALOOP	  HAS BEEN REACHED
 $AAEXIT           STX             LENGTH	SAVE RECORD LENGTH
-		END FIRST
+                END             FIRST

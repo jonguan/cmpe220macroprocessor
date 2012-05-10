@@ -98,9 +98,8 @@ int processLine(FILE * inputFile, FILE* outputFile, const char *macroLine)
 		}
 
 		// write line out
-        printOutputLine(outputFile, currentLine);
+        result = printOutputLine(outputFile, currentLine);
 
-		result = SUCCESS;
 	}
 
 	// Memory cleanup
