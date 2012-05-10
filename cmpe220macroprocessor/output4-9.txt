@@ -5,11 +5,11 @@ FIRST           CLEAR           X          CLEAR LOOP COUNTER
 $AALOOP           TD              =X'F3'  TEST INPUT DEVICE
                 JEQ             $AALOOP	LOOP UNTIL READY
                 RD              =X'F3'  READ CHARACTER INTO REG A
-                COMP            =X'000000,03,04[1]'
+                COMP            =X'000000'
                 JEQ             $AAEXIT
-                COMP            =X'000000,03,04[2]'
+                COMP            =X'000003'
                 JEQ             $AAEXIT
-                COMP            =X'000000,03,04[3]'
+                COMP            =X'000004'
                 JEQ             $AAEXIT
                 STCH            BUFFER,X	STORE CHARACTER IN BUFFER
                 TIXR            T		LOOP UNLESS MAXIMUM LENGTH

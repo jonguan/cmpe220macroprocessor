@@ -71,6 +71,7 @@ int argtab_add(argtab_t * table, const char * symbol, const char * value)
     int	result = FAILURE;
     struct argtab_data * element = NULL;
     struct argtab_data ** ht = NULL;
+	char *stringPtr = NULL;
 
     if(table != NULL && symbol != NULL && value != NULL)
     {
@@ -87,7 +88,21 @@ int argtab_add(argtab_t * table, const char * symbol, const char * value)
         if(element != NULL)
         {
             strcpy_s(element->key, ARGTAB_STRING_SIZE, symbol);
-            strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
+            
+			element->valIsArray = *value == '(' ? true : false;
+
+			if(element->valIsArray)
+			{
+				sscanf(value, "(%s)", element->value);
+				stringPtr = element->value;
+				// Remove the last parens
+				stringPtr[strlen(stringPtr)-1] = '\0';
+
+			}
+			else
+			{
+				strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
+			}
             HASH_ADD_STR(*ht, key, element);
             table->size++;
             result = SUCCESS;
@@ -113,6 +128,7 @@ int argtab_set(argtab_t * table, const char * symbol, const char * value)
     int	result = FAILURE;
     struct argtab_data * element = NULL;
     struct argtab_data ** ht = NULL;
+	char *stringPtr = NULL;
 
     if(table != NULL && symbol != NULL && value != NULL)
     {
@@ -121,7 +137,20 @@ int argtab_set(argtab_t * table, const char * symbol, const char * value)
         if(element)
         {
             // hash key found
-            strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
+			element->valIsArray = *value == '(' ? true : false;
+
+			if(element->valIsArray)
+			{
+				sscanf(value, "(%s)", element->value);
+				stringPtr = element->value;
+				// Remove the last parens
+				stringPtr[strlen(stringPtr)-1] = '\0';
+			}
+			else
+			{
+				strcpy_s(element->value, ARGTAB_STRING_SIZE, value);
+			}
+            
             result = SUCCESS;
         }
     }
@@ -233,7 +262,7 @@ void argtab_substituteValues(argtab_t * table, char * buffer, size_t bufsize)
 
             HASH_ITER(hh, *ht, i, tmp)
             {
-                strReplace(buffer, bufsize, i->key, i->value);
+				strReplace(buffer, bufsize, i->key, i->value, i->valIsArray);
             }
         }
     }

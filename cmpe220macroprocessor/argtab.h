@@ -6,13 +6,20 @@
 #define ARGTAB_H_
 
 #include "uthash\uthash.h"
+#include <stddef.h>
 
 #define ARGTAB_STRING_SIZE (64)
+#define bool unsigned char
+#define true 1
+#define false 0
 
+// Value is an array if it starts with ( and ends with )
+// NOTE: Parens are removed during insertion and bool is set
 struct argtab_data
 {
     char            key[ARGTAB_STRING_SIZE];
     char            value[ARGTAB_STRING_SIZE];
+	bool			valIsArray;
     UT_hash_handle  hh;
 };
 

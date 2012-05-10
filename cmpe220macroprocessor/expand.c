@@ -162,7 +162,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		/* 
 			Substitute arguments for operators here
 		*/
-		if(parsedLine->operators != NULL)
+		if(parsedLine->operators != NULL && shouldEvaluateSection)
 		{
 			// Copy parsedLine->operators to currentLine buffer
 			strncpy_s(currentLine, CURRENT_LINE_SIZE, parsedLine->operators, strlen(parsedLine->operators));
@@ -203,7 +203,9 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			
 			// Evaluate operands only if allowed to evaluate entire section
 			if(shouldEvaluateSection)
+			{
 				ifExpressionResult = evaluateIFOperands(parsedLine->operators);
+			}
 			else
 				ifExpressionResult = SKIP;
 
@@ -215,7 +217,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
             else 
 			{
 				if(isWhileExpression)
-					nestedWhileArray[WHILESTATEMENTLEVEL] = deftabIndex;
+					nestedWhileArray[WHILESTATEMENTLEVEL] = ifExpressionResult ? deftabIndex : SKIP;
 				else
 					nestedIFArray[IFSTATEMENTLEVEL] = ifExpressionResult;
 			}
@@ -259,6 +261,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 				else{
 					//While statements need to loop back if still true
 					deftabIndex = nestedWhileArray[WHILESTATEMENTLEVEL];
+					WHILESTATEMENTLEVEL --;
 					continue;
 				}
 				
@@ -324,7 +327,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
  */
 int setUpArguments (const char *currLine, const char *macroDef, const char *macroName)
 {
-	int n, argCount = 0;
+	int n=0, argCount = 0;
 	char *operand, *defOperand = NULL;
 	char *startPtr, *endPtr = NULL;
 	parse_info_t *splitInvLine = NULL;
@@ -434,12 +437,13 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 					if(*startPtr == '(')
 					{
 						// Expression (val1, val2, val3)
-						if(sscanf(startPtr, "(%s)", operand) == 1)
-						{
-							// Need help here: why is sscanf returning the last parens?!
-							endPtr = startPtr + strlen(operand) ;
-							startPtr++;
-						}
+						endPtr = strpbrk(startPtr, ")");
+						
+						if(endPtr != NULL)
+							endPtr++;
+						else
+							return FAILURE;
+						
 
 					}
 					

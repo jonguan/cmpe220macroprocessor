@@ -362,18 +362,24 @@ with another substring.
 * Returns:
 *  - none
 */
-void strReplace(char * string, size_t bufsize, const char * replace, const char * with)
+void strReplace(char * string, size_t bufsize, const char * replace, const char * with, BOOL valIsArray)
 {
-	char * tmpString = NULL;
-	char * searchptr = NULL;
-	char * srcptr = string;
-	char * srcmax = string + strlen(string);
-	char * dstptr = NULL;
-	char * dstmax = NULL;
+	char * tmpString = NULL; //New string is temporarily written here
+	char * searchptr = NULL; // Pointer to each instance of replace
+	char * srcptr = string;  // Pointer to current string
+	char * srcmax = string + strlen(string); //End of string
+	char * dstptr = NULL; // Pointer to tmpString
+	char * dstmax = NULL; // Pointer to end of tmpString
 	int i = 0;
-	int replaceSize;
-	int withSize;
-	int copySize;
+	int replaceSize; //strlen of replace
+	int withSize; // strlen of with
+	int copySize; // length of string to copy 
+
+	// Variables to replace array values
+	char arrayValBuffer[ARGTAB_STRING_SIZE]; //place to put array value if "with" is an array
+	char arrayIndexBuffer[ARGTAB_STRING_SIZE];
+	char *arrayIndexPtr = NULL;
+	char *arrayEndPtr = NULL;
 
 	// some error checking
 	if(string == NULL || bufsize <= 0 || replace == NULL || with == NULL)
@@ -387,32 +393,75 @@ void strReplace(char * string, size_t bufsize, const char * replace, const char 
 	dstmax = dstptr + bufsize - 1;
 	replaceSize = strlen(replace);
 	searchptr = strstr(srcptr, replace);
+	// distance from replace and current place in string vs 
+	// distance from end of destination string and current place in destination
 	copySize = getPositiveMin(searchptr - srcptr, dstmax - dstptr);
+	
+	
+
 	while(searchptr != NULL && dstptr < dstmax)
 	{
+	
 		if(copySize > 0)
 		{
-			memcpy(dstptr, srcptr, copySize);   // copy until match
+			//copies into dstptr, srcptr of size copySize
+			memcpy(dstptr, srcptr, copySize);   // copy original string up to matched string
 			dstptr += copySize;
 			srcptr += copySize;
 		}
-		withSize = getPositiveMin(strlen(with), dstmax - dstptr);
-		memcpy(dstptr, with, withSize);
-		dstptr += withSize;
-		srcptr += replaceSize;
 
-		searchptr = strstr(srcptr, replace);
+		/*
+		Check if with variable is an array
+		*/
+		if(valIsArray && *(arrayIndexPtr = searchptr + strlen(replace)) == '[')
+		{
+			// Check if value inside [] is replaced
+			
+			//get value on inside
+			if(arrayIndexPtr+1 == NULL || *(arrayIndexPtr+1) == ']')
+			{
+				// Error - can not end without value
+				return;
+			}
+			// Get index value
+			arrayEndPtr = strpbrk(arrayIndexPtr, "]");
+			strncpy_s(arrayIndexBuffer, ARGTAB_STRING_SIZE, ++arrayIndexPtr, (arrayEndPtr - arrayIndexPtr));
+
+			if (*arrayIndexBuffer == '&')
+			{
+				// Get value and put into arrayIndexBuffer
+				strcpy_s(arrayIndexBuffer, ARGTAB_STRING_SIZE, argtab_get(argtab, arrayIndexBuffer));
+			}
+
+			// Get array value with index
+			arrayValueForIndex(with, arrayValBuffer, arrayIndexBuffer);
+
+			withSize = getPositiveMin(strlen(arrayValBuffer), dstmax - dstptr);
+			memcpy(dstptr, arrayValBuffer, withSize);
+			dstptr += withSize;
+			srcptr = ++arrayEndPtr;
+		}
+		else
+		{
+			withSize = getPositiveMin(strlen(with), dstmax - dstptr); 
+
+			memcpy(dstptr, with, withSize); // copy with size into dstptr
+			dstptr += withSize;
+			srcptr += replaceSize;
+		}
+		searchptr = strstr(srcptr, replace); //get next instance of replace
 		copySize = getPositiveMin(searchptr - srcptr, dstmax - dstptr);
+		
 	}
 	if(searchptr == NULL && srcmax > srcptr)
 	{
 		copySize = getPositiveMin(srcmax - srcptr, dstmax - dstptr);
-		memcpy(dstptr, srcptr, copySize);
+		memcpy(dstptr, srcptr, copySize); // copy original string tail to destination string
 		dstptr += copySize;
 		srcptr += copySize;
 	}
 	*dstptr = '\0'; // null termination
-	strcpy_s(string, bufsize, tmpString);
+	strcpy_s(string, bufsize, tmpString); //move buffer back into original string
 	free(tmpString);
 }
 
@@ -461,7 +510,7 @@ void printOutputLine(FILE * outputFile, const char * line)
             strcpy_s(tmpLine, sizeof(tmpLine), line);
             memset(uniquePrefix, 0, sizeof(uniquePrefix));
             getUniquePrefix(UNIQUE_ID, uniquePrefix, sizeof(uniquePrefix));
-            strReplace(tmpLine, sizeof(tmpLine), "$", uniquePrefix);
+			strReplace(tmpLine, sizeof(tmpLine), "$", uniquePrefix, FALSE);
             fprintf(outputFile, "%s\n", tmpLine);
         }
         parse_info_free(parseInfo);
@@ -544,4 +593,44 @@ void splitKeyValuePair(const char * string, char * key, size_t keysize, char * v
         }
         free(tmp);
     }
+}
+
+
+/**
+ * Function: arrayValueForIndex
+ * Description:
+ *  - Given a string in the format of "val1,val2,val3", returns val depending on the index
+ *  - NOTE: Index starts at 1, not 0!
+ * Parameters:
+ *  - stringArray: String containing array in format of val1,val2,val3
+ *  - arrayVal: buffer to put result in
+ *  - index: number in string format
+ *  
+ * Returns:
+ *  - SUCCESS if array replacement succeeds
+ *  - FAILURE if index is out of bounds or other error
+ */
+int arrayValueForIndex(const char *stringArray, char *arrayVal, char *index)
+{
+	char *value = NULL;
+	char *nextToken = NULL;
+	int indexAsInt = atoi(index);
+	char *inputArray = _strdup(stringArray);
+	int n = 0;
+
+	if(indexAsInt == 0)
+		return FAILURE;
+
+	
+	value = strtok_s(inputArray, ", ", &nextToken);
+	for(n=1; n<indexAsInt; n++)
+	{
+		value = strtok_s(NULL, ", ", &nextToken);
+	}
+
+	strcpy_s(arrayVal, ARGTAB_STRING_SIZE, value);
+	
+	free(inputArray);
+
+	return SUCCESS;
 }
