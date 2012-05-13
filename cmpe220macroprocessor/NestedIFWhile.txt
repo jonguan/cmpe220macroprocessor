@@ -1,0 +1,48 @@
+RDBUFF     MACRO     &INDEV,&BUFADR,&RECLTH,&EOR,&MAXLTH
+           IF        (&EOR NE '')
+&EORCK     SET       1
+&WHILECK   SET       1
+           ENDIF
+           CLEAR     X          CLEAR LOOP COUNTER
+           CLEAR     A
+           IF        (&EORCK EQ 1)
+           LDCH     =X'&EOR'    SET EOR CHARACTER
+           RMO       A,S
+           ENDIF
+           IF        (&MAXLTH EQ '')
+          +LDT      #4096       SET MAX LENGTH = 4096
+	   WHILE     (&WHILECK LE 5)
+	   IF        (&WHILECK LT 3)
+	   PRINT     &WHILECK
+	   ELSE
+ 	   PRINT     "OH BOY"
+           ENDIF
+&WHILECK   SET	     &WHILECK+1
+	   ENDW
+           ELSE
+	  +LDT	    #&MAXLTH    SET MAXIMUM RECORD LENGTH
+   	   WHILE     (&WHILECK LE 5)
+	   IF        (&WHILECK LT 3)
+	   PRINT     "HIP HIP"
+	   ELSE
+ 	   PRINT     "HOORAY"
+           ENDIF
+&WHILECK   SET	     &WHILECK+1
+	   ENDW
+	   ENDIF           
+$LOOP      TD       =X'&INDEV'  TEST INPUT DEVICE
+ 	   JEQ       $LOOP	LOOP UNTIL READY
+	   RD       =X'&INDEV'  READ CHARACTER INTO REG A
+	   IF        (&EORCK EQ 1)
+	   COMPR     A,S	TEST FOR END OF RECORD
+	   JEQ       $EXIT	EXIT LOOP IF EOR
+	   ENDIF
+	   STCH	     &BUFADR,X	STORE CHARACTER IN BUFFER
+	   TIXR	     T		LOOP UNLESS MAXIMUM LENGTH
+	   JLT	     $LOOP	  HAS BEEN REACHED
+$EXIT	   STX	     &RECLTH	SAVE RECORD LENGTH
+	   MEND
+FIRST    RDBUFF    F3,BUF,RECL,04,2048
+	 RDBUFF    0E,BUFFER,LENGTH,,80
+      	 RDBUFF    F1,BUFF,RLENG,04
+		END FIRST

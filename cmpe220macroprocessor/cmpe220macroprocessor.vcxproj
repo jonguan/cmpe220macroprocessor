@@ -78,6 +78,7 @@
     <None Include="Fig4-8.txt" />
     <None Include="Fig4-9.txt" />
     <None Include="ReadMe.txt" />
+    <None Include="SimpleIfWhile.txt" />
     <None Include="Test1.txt" />
     <None Include="TestKeyword.txt" />
     <None Include="TestUniqueLabels.txt" />

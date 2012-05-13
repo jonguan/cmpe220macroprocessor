@@ -1,0 +1,25 @@
+.FIRST     TESTIF   HIP,HIP2,HOORAY,10
+                PRINT           "FIRST NE BLANK"
+                PRINT           "HELLO"
+                PRINT           HIP
+                PRINT           HOORAY
+                PRINT           HIP
+                PRINT           HOORAY
+                PRINT           HIP
+                PRINT           HOORAY
+                PRINT           HIP
+                PRINT           HOORAY
+                PRINT           HIP2
+                PRINT           HOORAY
+                PRINT           HIP2
+                PRINT           HOORAY
+                PRINT           HIP2
+                PRINT           HOORAY
+                PRINT           HIP2
+                PRINT           HOORAY
+                PRINT           HIP2
+                PRINT           HOORAY
+                PRINT           HIP2
+                PRINT           HOORAY
+$AAEXIT           STX             10  SAVE TIMES
+                END             FIRST

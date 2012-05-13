@@ -42,9 +42,9 @@ char *currentLabel = NULL;
 int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)  
 {
 	
-	// If/WHILE Statement level - For conditional macro expansion
-	int IFSTATEMENTLEVEL = 0;
-	int WHILESTATEMENTLEVEL = 0;
+	// Condition Statement level - For conditional macro expansion
+	int CONDSTATEMENTLEVEL = 0;
+	//int WHILESTATEMENTLEVEL = 0;
 	/* 
 		For nested ifs, we keep track of result of the IF expression evaluation
 		Global variable IFSTATEMENTLEVEL is a pointer to the current index in array
@@ -56,7 +56,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 	BOOL shouldEvaluateSection = TRUE;
 	int ifExpressionResult;
 	BOOL isWhileExpression = FALSE;
-	int nestedIFArray[MAX_NESTED_IF_SIZE];
+	int nestedCondArray[MAX_NESTED_COND_SIZE];
 	int nestedWhileArray[MAX_NESTED_WHILE_SIZE];
 	char *line;
 	char *labelledLine;
@@ -74,10 +74,10 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		Initialize variables
 	*/
 	EXPANDING = TRUE;
-	memset(nestedIFArray, '\0', MAX_NESTED_IF_SIZE);
-	memset(nestedWhileArray, '\0', MAX_NESTED_WHILE_SIZE);
-	nestedIFArray[0] = TRUE;
-	nestedWhileArray[0] = TRUE;
+	memset(nestedCondArray, '\0', MAX_NESTED_COND_SIZE);
+	//memset(nestedWhileArray, '\0', MAX_NESTED_WHILE_SIZE);
+	nestedCondArray[0] = TRUE;
+	//nestedWhileArray[0] = TRUE;
 
 	if(VERBOSE) {
 		printf("EXPAND: Expanding Macro: %s ...\n", macroName);
@@ -177,7 +177,7 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		}
 		// Write back into currentLine
 		parse_reconstruct_string(parsedLine, currentLine); 
-
+			
 		/* 
 			Check for conditional expansion keywords - IF, ELSE, ENDIF, WHILE, ENDW
 			Algorithm is as follows:
@@ -196,10 +196,9 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 			isWhileExpression = (strncmp(parsedLine->opcode, "WHILE", strlen("WHILE")) == SUCCESS);
 
 			// Increment global variable
-			if(isWhileExpression)
-				WHILESTATEMENTLEVEL++;
-			else
-				IFSTATEMENTLEVEL++;
+			
+			CONDSTATEMENTLEVEL++;
+		
 			
 			// Evaluate operands only if allowed to evaluate entire section
 			if(shouldEvaluateSection)
@@ -214,13 +213,16 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 				printf("ERROR: Failed to parse operands in IF statement.\n");
 				return FAILURE;
 			}
-            else 
+            else if(ifExpressionResult == SKIP)
 			{
-				if(isWhileExpression)
-					nestedWhileArray[WHILESTATEMENTLEVEL] = ifExpressionResult ? deftabIndex : SKIP;
-				else
-					nestedIFArray[IFSTATEMENTLEVEL] = ifExpressionResult;
+				nestedCondArray[CONDSTATEMENTLEVEL] = SKIP;
 			}
+			else
+			{
+				//only put while def line input here if the while evals true
+				nestedCondArray[CONDSTATEMENTLEVEL] = (isWhileExpression && ifExpressionResult) ? deftabIndex : ifExpressionResult;
+			}
+
 			// Only evaluate section if it's true, otherwise skip
 			shouldEvaluateSection = (ifExpressionResult == TRUE);
 			
@@ -232,57 +234,60 @@ int expand(FILE *inputFileDes, FILE *outputFileDes, const char *macroName)
 		else if(strncmp(parsedLine->opcode, "ENDIF", strlen("ENDIF")) == SUCCESS || 
 			strncmp(parsedLine->opcode, "ENDW", strlen("ENDW")) == SUCCESS)
 		{
-			isWhileExpression = strncmp(parsedLine->opcode, "ENDW", strlen("ENDW")) == SUCCESS;
-
-			// Decrement global variable
-			if (!isWhileExpression)
-				IFSTATEMENTLEVEL--;
-			
-			//Check if global variable is less than 0
-			if(IFSTATEMENTLEVEL < 0 || WHILESTATEMENTLEVEL < 0)
-			{
-				printf("ERROR: Number of ENDIF/ENDW Statements do not match with number of IF/WHILE statements");
-				return FAILURE;
-			}
+			isWhileExpression = strncmp(parsedLine->opcode, "ENDW", strlen("ENDW")) == SUCCESS;			
 
 			// Resets shouldEvaluateSection to the value from before the if/while started
 			// IF/WHILE STATEMENT LEVELs were decremented before this section
 			if (isWhileExpression)
 			{
 				//If the while expression evaluated to false, break out of the loop
-				if(shouldEvaluateSection == SKIP)
+				if(shouldEvaluateSection == FALSE)
 				{
-					WHILESTATEMENTLEVEL--;
-				}else if(shouldEvaluateSection == FALSE)
-				{
-					WHILESTATEMENTLEVEL--;
-					shouldEvaluateSection = TRUE;
+					//if current while condition is false
+					CONDSTATEMENTLEVEL--;
+					shouldEvaluateSection = (nestedCondArray[CONDSTATEMENTLEVEL] == TRUE);
 				}
 				else{
 					//While statements need to loop back if still true
-					deftabIndex = nestedWhileArray[WHILESTATEMENTLEVEL];
-					WHILESTATEMENTLEVEL --;
+					deftabIndex = nestedCondArray[CONDSTATEMENTLEVEL];
+					CONDSTATEMENTLEVEL --;
 					continue;
 				}
 				
 			}
 			else
 			{
-				shouldEvaluateSection = (nestedIFArray[IFSTATEMENTLEVEL] == TRUE);
+				CONDSTATEMENTLEVEL--;
+				// If an if loop inside while loop, while loop is a line number
+				// Fortunately, line 0 must always be definition line, not while
+				shouldEvaluateSection = (nestedCondArray[CONDSTATEMENTLEVEL] >= TRUE);
 			}
 
 			deftabIndex++;
+
+			//Check if global variable is less than 0
+			if(CONDSTATEMENTLEVEL < 0)
+			{
+				printf("ERROR: Number of ENDIF/ENDW Statements do not match with number of IF/WHILE statements");
+				return FAILURE;
+			}
+
 			continue;
 			
 		}
-		else if(strncmp(parsedLine->opcode, "ELSE", strlen("ELSE")) == SUCCESS && IFSTATEMENTLEVEL > 0)
+		else if(strncmp(parsedLine->opcode, "ELSE", strlen("ELSE")) == SUCCESS && CONDSTATEMENTLEVEL > 0)
 		{
 			//Process the next line until endif only if IF evaluation was false
 			// Likewise, if the IF was true, then evaluate is FALSE
-			shouldEvaluateSection = (shouldEvaluateSection > -1) ? !shouldEvaluateSection : shouldEvaluateSection; 
-			
-			//Replace the value inside the nestedIFArray with the new value in case a new if/endif disrupts parsing
-			nestedIFArray[IFSTATEMENTLEVEL] = shouldEvaluateSection;
+			if(nestedCondArray[CONDSTATEMENTLEVEL] > -1)
+			{
+				// section not skipped, so flip the section evaluation
+				shouldEvaluateSection = !shouldEvaluateSection;
+		
+				//Replace the value inside the nestedIFArray with the new value
+				// in case a new if/endif disrupts parsing
+				nestedCondArray[CONDSTATEMENTLEVEL] = shouldEvaluateSection;
+			}
 
 			deftabIndex++;
 			continue;
@@ -436,7 +441,7 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 
 				endPtr = strpbrk(startPtr, ", ");
 				
-                if(endPtr != NULL)
+                if(startPtr != NULL)
                 {
 					if(*startPtr == '(')
 					{
@@ -451,7 +456,10 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
 
 					}
 					
-					strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
+					if(endPtr == NULL)
+						strncpy_s(operand, SHORT_STRING_SIZE, startPtr, strlen(startPtr));
+					else
+						strncpy_s(operand, SHORT_STRING_SIZE, startPtr, (endPtr-startPtr));
 					
                 }
 			}
@@ -527,6 +535,11 @@ int evaluateExpressionOperands(char *operands)
 		start = end;
 
 		//start should now either point to space or math operator
+
+		// REMOVE SPACES
+		while(*start == ' ')
+			start++;
+
 		n = strcspn(start, "+-*/%()");
 		start += n;
 		end = start+1;
@@ -709,21 +722,16 @@ int evaluateIFOperands(char *operands)
 	}
 	else if(strcmp(middleoperand,"GT") == 0)
 	{
-		if(strcmp(leftoperand, rightoperand) > 0)
-			return TRUE;
-		else
-			return FALSE;
+		return atoi(leftoperand) > atoi(rightoperand);
 	}
 	else if(strcmp(middleoperand,"LT") == 0)
 	{
-		if(strcmp(leftoperand, rightoperand) < 0)
-			return TRUE;
-		else
-			return FALSE;
-	}else if(strcmp(middleoperand, "LE") == 0)
-		return (strcmp(leftoperand, rightoperand) <= 0);
+		return atoi(leftoperand) < atoi(rightoperand);
+	}
+	else if(strcmp(middleoperand, "LE") == 0)
+		return atoi(leftoperand) <= atoi(rightoperand);
 	else if(strcmp(middleoperand, "GE") == 0)
-		return (strcmp(leftoperand, rightoperand) >= 0);
+		return atoi(leftoperand) >= atoi(rightoperand);
 
 	return FAILURE;
 }

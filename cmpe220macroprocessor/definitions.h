@@ -26,7 +26,7 @@
 #define SHORT_STRING_SIZE   (16)
 #define UNIQUE_LABEL_DIGITS (2)
 #define MAX_UNIQUE_LABELS   (26 * 26)
-#define MAX_NESTED_IF_SIZE  (20)
+#define MAX_NESTED_COND_SIZE  (24)
 #define MAX_NESTED_WHILE_SIZE (8)
 
 // Pretty Print Sizes

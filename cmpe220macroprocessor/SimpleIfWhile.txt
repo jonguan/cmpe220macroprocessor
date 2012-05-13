@@ -1,0 +1,33 @@
+TESTIF     MACRO     &FIRST,&SEC,&THIRD,&TIMES
+           IF        (&TIMES NE '')
+&WHILECK   SET       1
+           ENDIF
+           IF        (&FIRST NE '')
+           PRINT     "FIRST NE BLANK"
+           ENDIF
+           IF        (&SEC EQ '')
+&FIRST        SET       &SEC
+	          WHILE     (&WHILECK LE &TIMES)
+	          IF        (&WHILECK LT 5)
+	          PRINT     &WHILECK
+	          ELSE
+ 	          PRINT     "OH BOY"
+                ENDIF
+&WHILECK      SET	     &WHILECK+1
+	          ENDW
+           ELSE
+	          PRINT     "HELLO"
+   	         WHILE     (&WHILECK LE &TIMES)
+	       IF        (&WHILECK LT 5)
+	       PRINT     &FIRST
+	       ELSE
+ 	       PRINT     &SEC
+               ENDIF
+	       PRINT     &THIRD
+&WHILECK       SET	     &WHILECK+1
+	     ENDW
+	   ENDIF           
+$EXIT	   STX	     &TIMES  SAVE TIMES
+	   MEND
+FIRST     TESTIF   HIP,HIP2,HOORAY,10
+		END FIRST
