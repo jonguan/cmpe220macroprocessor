@@ -1,0 +1,67 @@
+Test Case #1
+Run the program with file Fig4-1.txt
+In RDBUFF, =X'&INDEV' should become =X'F1'
+
+Test Case #2
+Run the program with file Fig4-1.txt
+In RDBUFF, &BUFADR,X should become BUFFER,X
+
+Test Case #3
+Run the program with file Fig4-1.txt
+In WRBUFF, =X'&OUTDEV' should become =X'05'
+
+Test Case #4
+Run the program with file Fig4-8.txt
+In RDBUFF, EOR character =X'&EOR' should become =X'04'    
+
+Test Case #5
+Run the program with file Fig4-8.txt
+In RDBUFF, &RECLTH should become LENGTH
+
+Test Case #6
+Run the program with file Fig4-8.txt
+There should be 3 start loops: $AALOOP, $ABLOOP, and $ACLOOP 
+
+Test Case #7
+Run the program with file Fig4-8.txt
+There should be 3 exit loops: $AAEXIT, $ABEXIT and $ACEXIT
+
+Test Case #8
+Run the program with file Fig4-8.txt
+#&MAXLTH should become #80
+
+Test Case #9
+Run the program with file Fig4-9.txt
+This WHILE loop will evaluate (&CTR LE &EORCT) and this =X'0000&EOR[&CTR]' should become =X'000000', =X'000003', and =X'000004'
+
+Test Case #10
+Run the program with file Fig4-9.txt
+&RECLTH should become LENGTH
+
+Test Case #11
+Run the program with file SimpleIfWhile.txt
+The first line to print out is "FIRST NE BLANK"
+
+Test Case #12
+Run the program with file SimpleIfWhile.txt
+The program will loop 10 times and display "HOORAY" 10 times.
+
+Test Case #13
+Run the program with file SimpleIfWhile.txt
+The program will loop 10 times and display "HIP" 5 times and "HIP2" 5 times.
+
+Test Case #14
+Run the program with file TestKeyWord.txt
+=X'&OUTDEV' should become =X'05'
+
+Test Case #15
+Run the program with file TestKeyWord.txt
+=X'&INDEV' should become =X'F1'
+
+Test Case #16
+Run the program with file TestUniqueLabels.txt
+There should be 4 start loops: $AALOOP, $ABLOOP, $AELOOP, and $AFLOOP
+
+Test Case #17
+Run the program with file TestUniqueLabels.txt
+There should be 4 exit loops: $AAEXIT, $ABEXIT, $AEEXIT, and $AFEXIT
