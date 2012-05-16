@@ -394,7 +394,11 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
         while(defOperand != NULL)
         {
             splitKeyValuePair(defOperand, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue));
-            argtab_addOrSet(argtab, tmpKey, tmpValue);
+			if(argtab_addOrSet(argtab, tmpKey, tmpValue) == FAILURE)
+			{
+				printf("Illegal Parameter!\n");
+				return FAILURE;
+			}
             defOperand = strtok_s(NULL, ", ", &nextDefToken);
         }
 
@@ -403,7 +407,11 @@ int setUpArguments (const char *currLine, const char *macroDef, const char *macr
         while(operand != NULL)
         {
             splitKeyValuePair(operand, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue));
-            argtab_addOrSet(argtab, tmpKey, tmpValue);
+            if (argtab_set(argtab, tmpKey, tmpValue) == FAILURE)
+			{
+				printf("Illegal Parameter!\n");
+				return FAILURE;
+			}
             operand = strtok_s(NULL, ", ", &nextInvToken);
         }
     }
