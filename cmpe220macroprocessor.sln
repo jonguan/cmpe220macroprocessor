@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmpe220macroprocessor", "cmpe220macroprocessor\cmpe220macroprocessor.vcxproj", "{510F8D0E-8050-4442-B010-833F02717F24}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6F08509C-7D9E-4796-B9B1-B8F6A53A2B4E}"
+	ProjectSection(SolutionItems) = preProject
+		cmpe220macroprocessor\TestCases.txt = cmpe220macroprocessor\TestCases.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
